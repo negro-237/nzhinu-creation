@@ -231,9 +231,14 @@ class ManualPaymentTest extends TestCase
             $this->denied(fn () => $service->handover($this->f['actor'], $order->id, (string) Str::uuid(), $data));
             $this->assertSame(OrderStatus::Completed, $order->fresh()->status);
             $this->assertSame(ReservationStatus::Consumed, $order->reservation->fresh()->status);
+            $summary = app(OrderAccess::class)->summary($order->fresh());
+            $this->assertSame('paid', $summary['payment_status_code']);
+            $this->assertSame($method === 'delivery' ? 'shipped' : 'collected', $summary['fulfillment_status_code']);
             $this->verifyPayment($this->admin, $this->receipt($this->admin, $order, '105', PaymentKind::Refund));
             $this->assertSame(OrderStatus::Completed, $order->fresh()->status);
             $this->assertSame(PaymentStatus::Refunded, $order->fresh()->payment_status);
+            $this->assertSame('refunded', app(OrderAccess::class)->summary($order->fresh())['payment_status_code']);
+            $this->assertNotNull(app(OrderAccess::class)->summary($order->fresh())['handover']);
             $this->denied(fn () => app(OrderWorkflow::class)->cancel($this->admin, $order->id, $order->fresh()->version, 'Annulation interdite'));
             $this->denied(fn () => app(ReservationService::class)->reactivate($this->admin, $order->inventory_reservation_id, (string) Str::uuid()));
         }

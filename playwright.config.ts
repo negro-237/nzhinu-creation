@@ -7,7 +7,7 @@ Object.assign(process.env, {
     DB_CONNECTION: 'sqlite', DB_URL: '', DB_DATABASE: path.resolve('storage/framework/testing/e2e.sqlite'),
     CACHE_STORE: 'database', SESSION_DRIVER: 'database', SESSION_SECURE_COOKIE: 'false', SESSION_ENCRYPT: 'true',
     QUEUE_CONNECTION: 'database', MAIL_MAILER: 'array', ORDER_EMAIL_ENABLED: 'false', BCRYPT_ROUNDS: '4',
-    WHATSAPP_CA: '', WHATSAPP_CM: '',
+    WHATSAPP_CA: '', WHATSAPP_CM: '23755278597', SHOP_CONTACT_EMAIL: 'infos@nhinu-creation.com',
     SOCIAL_FACEBOOK_URL: 'https://www.facebook.com/profile.php?id=100071095101171', SOCIAL_TIKTOK_URL: '', SOCIAL_YOUTUBE_URL: '',
 });
 

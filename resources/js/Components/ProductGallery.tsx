@@ -47,7 +47,7 @@ export default function ProductGallery({ images }: { images: ProductDetail['imag
         if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) move(dx < 0 ? 1 : -1);
     }
     function arrow(previous: boolean, controls = trackId) {
-        return <button type="button" aria-label={previous ? t.previous_image : t.next_image} aria-controls={controls} onClick={() => move(previous ? -1 : 1)} className={`absolute top-1/2 ${previous ? 'left-3' : 'right-3'} flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-brand-gold bg-brand-ink text-white shadow-md transition-colors hover:bg-brand-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold`}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none block size-5 shrink-0" aria-hidden="true" focusable="false"><path d={previous ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'} /></svg></button>;
+        return <button type="button" aria-label={previous ? t.previous_image : t.next_image} aria-controls={controls} onClick={() => move(previous ? -1 : 1)} className={`absolute top-1/2 ${previous ? 'left-3' : 'right-3'} flex size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-brand-gold bg-brand-black text-brand-gold shadow-md transition-colors hover:bg-brand-gold hover:text-brand-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold`}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none block size-5 shrink-0" aria-hidden="true" focusable="false"><path d={previous ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'} /></svg></button>;
     }
     function keyboard(event: KeyboardEvent) {
         if (!multiple) return;
@@ -71,7 +71,7 @@ export default function ProductGallery({ images }: { images: ProductDetail['imag
         keyboard(event);
     }
     return <section ref={gallery} aria-label={t.gallery} aria-roledescription={multiple ? t.carousel : undefined} className="min-w-0" onKeyDown={keyboard}>
-        <div className="relative overflow-hidden border border-black/10 bg-white">
+        <div className="relative overflow-hidden border border-black/10 bg-[#f4f1eb]">
             <div id={trackId} tabIndex={multiple ? 0 : undefined} aria-label={t.gallery_navigation} className="aspect-[4/5] outline-offset-[-3px] focus-visible:outline-2 focus-visible:outline-brand-gold" style={{ touchAction: 'pan-y pinch-zoom' }}
                 onTouchStart={touchStart}
                 onTouchCancel={() => { start.current = null; }}
@@ -91,7 +91,7 @@ export default function ProductGallery({ images }: { images: ProductDetail['imag
         </div>
         {multiple && <>
             <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-stone-600"><p role="status" aria-live="polite" aria-atomic="true">{t.image} {index + 1} {t.of} {images.length}</p><p>{t.gallery_hint}</p></div>
-            <div ref={thumbnails} className="relative mt-3 flex gap-3 overflow-x-auto p-1" aria-label={t.gallery_thumbnails}>{images.map((image, position) => <button key={`${image.url}-${position}`} type="button" aria-pressed={position === index} aria-label={`${t.show_image} ${position + 1} : ${image.alt}`} aria-controls={trackId} onClick={() => select(position)} className={`size-20 shrink-0 cursor-pointer border-2 bg-white p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold ${position === index ? 'border-brand-gold' : 'border-black/10'}`}><img src={image.url} alt="" width="80" height="80" loading="lazy" className="h-full w-full object-contain" /></button>)}</div>
+            <div ref={thumbnails} className="relative mt-3 flex gap-3 overflow-x-auto p-1" aria-label={t.gallery_thumbnails}>{images.map((image, position) => <button key={`${image.url}-${position}`} type="button" aria-pressed={position === index} aria-label={`${t.show_image} ${position + 1} : ${image.alt}`} aria-controls={trackId} onClick={() => select(position)} className={`size-20 shrink-0 cursor-pointer border-2 bg-white p-1 transition-colors hover:border-brand-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold ${position === index ? 'border-brand-gold' : 'border-black/10'}`}><img src={image.url} alt="" width="80" height="80" loading="lazy" className="h-full w-full object-contain" /></button>)}</div>
         </>}
         {images[index] && <dialog ref={dialog} aria-label={t.image_viewer} onCancel={() => setExpanded(false)} onClose={() => { setExpanded(false); setZoomed(false); }} onClick={(event) => { if (event.target === event.currentTarget) setExpanded(false); }} onKeyDown={modalKeyboard} className="fixed inset-0 m-auto h-fit max-h-[94dvh] w-[92vw] max-w-6xl overflow-hidden border border-black/10 bg-brand-cream p-0 text-brand-black shadow-2xl backdrop:bg-black/80">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 bg-white px-3 py-2 sm:px-5">

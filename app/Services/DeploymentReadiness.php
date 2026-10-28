@@ -34,6 +34,7 @@ class DeploymentReadiness
         $add('cache', 'Cache partagé pour les verrous et limitations', in_array(config('cache.default'), ['database', 'redis', 'memcached'], true));
         $add('build', 'Assets frontend compilés et logo présents', is_file(public_path('build/manifest.json')) && is_file(public_path('images/logo-transparent.png')));
         $add('hot', 'Serveur Vite de développement absent', ! is_file(public_path('hot')));
+        $add('seo_indexable', 'Indexation publique activée après validation du domaine', (bool) config('seo.indexable'), false);
         $add('writable', 'Répertoires Laravel accessibles en écriture', is_writable(storage_path()) && is_writable(base_path('bootstrap/cache')));
         $mailer = (string) config('mail.default');
         $email = (bool) config('communications.order_email_enabled');

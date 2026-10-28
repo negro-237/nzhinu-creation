@@ -1,3 +1,4 @@
+import ArrowIcon from './ArrowIcon';
 import { Link, usePage } from '@inertiajs/react';
 import type { ShopProps } from '../types/shop';
 import BoutiqueAddress from './BoutiqueAddress';
@@ -44,7 +45,8 @@ export default function ShopFooter() {
                 <div className="min-w-0 border-t border-black/10 pt-8 sm:border-t-0 sm:pt-0">
                     <h2 className="mb-5 text-xs font-semibold tracking-[0.16em] uppercase">{t.footer_visit}</h2>
                     <div className="text-stone-600"><BoutiqueAddress showTitle={false} /></div>
-                    {shop.whatsapp_url && <a href={shop.whatsapp_url} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center gap-3 border-b border-brand-ink py-2 text-sm font-medium text-brand-ink">{t.whatsapp}<span aria-hidden="true">↗</span></a>}
+                    {shop.contact_email && <a href={`mailto:${shop.contact_email}`} className="mt-5 flex min-h-11 items-center gap-2 break-all text-sm text-stone-600 hover:text-brand-ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5 shrink-0" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 6 9 7 9-7" /></svg>{shop.contact_email}</a>}
+                    {shop.whatsapp_url && <a href={shop.whatsapp_url} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center gap-3 border-b border-brand-ink py-2 text-sm font-medium text-brand-ink">{t.whatsapp}<span aria-hidden="true"><ArrowIcon /></span></a>}
                 </div>
             </div>
         </div>

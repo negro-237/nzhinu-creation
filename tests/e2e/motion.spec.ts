@@ -19,7 +19,7 @@ test('animations natives et préférence de mouvement réduit', async ({ page })
             return original.apply(this, args);
         };
     });
-    const market = page.locator('#marches li').first();
+    const market = page.locator('#marches [data-reveal]').first();
     await market.scrollIntoViewIfNeeded();
     await expect.poll(() => page.evaluate(() => (window as any).revealAnimations)).toBeGreaterThan(0);
     await expect.poll(() => market.evaluate((element) => getComputedStyle(element).opacity)).toBe('1');
@@ -34,7 +34,11 @@ test('animations natives et préférence de mouvement réduit', async ({ page })
     await expect(card).toHaveCSS('opacity', '1');
     expect(await page.evaluate(() => (window as any).revealAnimations)).toBe(count);
     await expect(page.locator('main')).toHaveCSS('animation-name', 'none');
-    expect(await page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running').length)).toBe(0);
+    // Navigation completion can briefly leave a transition outside the storefront (the progress indicator).
+    await expect.poll(() => page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running').map((animation) => ({
+        name: 'animationName' in animation ? animation.animationName : animation.constructor.name,
+        target: ((animation.effect as KeyframeEffect)?.target as HTMLElement)?.outerHTML.slice(0, 300),
+    })))).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     expect(errors).toEqual([]);
 });

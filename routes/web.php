@@ -2,11 +2,14 @@
 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\SearchIndexController;
 use App\Http\Controllers\StorefrontController;
 use App\Http\Middleware\PrivateOrderPage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [StorefrontController::class, 'home'])->block()->name('home');
+Route::get('/sitemap.xml', [SearchIndexController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/robots.txt', [SearchIndexController::class, 'robots'])->name('seo.robots');
 Route::get('/boutique', [StorefrontController::class, 'catalog'])->middleware('throttle:catalog-search')->block()->name('shop.catalog');
 Route::get('/pages/{slug}', [StorefrontController::class, 'page'])->where('slug', '[a-z0-9-]+')->block()->name('shop.page');
 Route::get('/produits/{slug}', [StorefrontController::class, 'product'])->block()->name('shop.product')->where('slug', '[a-z0-9-]+');

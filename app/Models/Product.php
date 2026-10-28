@@ -19,6 +19,11 @@ class Product extends Model implements HasMedia
 
     protected $fillable = ['category_id', 'name', 'slug', 'description', 'status', 'version'];
 
+    public function scopeWithoutDemonstration(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('variants', fn (Builder $variants) => $variants->withTrashed()->where('sku', 'like', 'DEMO-NZ-%'));
+    }
+
     protected function casts(): array
     {
         return ['status' => ProductStatus::class, 'version' => 'integer'];

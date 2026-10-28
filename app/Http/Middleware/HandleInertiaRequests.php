@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\ContentService;
 use App\Services\ShoppingCart;
 use App\Services\SocialLinks;
+use App\Services\StorefrontCatalog;
 use App\Services\StorefrontMarket;
 use App\Services\WhatsAppContact;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ class HandleInertiaRequests extends Middleware
                 return [
                     'boutique' => config('storefront.boutique'),
                     'social_links' => app(SocialLinks::class)->publicLinks(),
+                    'contact_email' => filter_var(config('communications.contact_email'), FILTER_VALIDATE_EMAIL) ?: null,
+                    'categories' => app(StorefrontCatalog::class)->homeCategories($markets->current($request)),
                     'pages' => app(ContentService::class)->navigation($markets->current($request)),
                     'whatsapp_url' => app(WhatsAppContact::class)->link($markets->current($request)),
                     'market' => $markets->current($request)->only(['code', 'name', 'currency']),

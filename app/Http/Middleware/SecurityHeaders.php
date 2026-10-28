@@ -32,10 +32,12 @@ class SecurityHeaders
         if (! $response->headers->has('Referrer-Policy')) {
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         }
-        if ($admin || $request->is('commander', 'commandes/*')) {
+        if ($admin || $request->is('panier', 'panier/*', 'commander', 'commandes/*')) {
             $response->headers->set('Cache-Control', 'private, no-store');
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
             $response->headers->set('Referrer-Policy', 'no-referrer');
+        } elseif (! config('seo.indexable') && ! $response->headers->has('X-Robots-Tag')) {
+            $response->headers->set('X-Robots-Tag', 'noindex, follow');
         }
         if ($request->isSecure() && app()->environment('production')) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000');

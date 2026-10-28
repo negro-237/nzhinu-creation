@@ -19,7 +19,7 @@
 
 @layer components {
     .shop-container { @apply mx-auto w-full max-w-7xl px-5 sm:px-10; }
-    .shop-field { @apply w-full rounded-sm border border-stone-300 bg-white px-3 py-3 text-sm text-brand-black outline-none focus:border-brand-ink focus:ring-1 focus:ring-brand-ink; }
+    .shop-field { @apply w-full min-w-0 rounded-sm border border-stone-300 bg-white px-3 py-3 text-base text-brand-black outline-none focus:border-brand-ink focus:ring-1 focus:ring-brand-ink sm:text-sm; }
     .primary-button { @apply inline-flex items-center justify-center gap-5 rounded-sm bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition-colors hover:bg-brand-gold-hover disabled:cursor-not-allowed disabled:opacity-50; }
     .secondary-button { @apply inline-flex items-center justify-center rounded-sm border border-black/20 bg-white px-4 py-3 text-sm hover:border-brand-ink disabled:cursor-not-allowed disabled:opacity-50; }
     .shop-error { @apply text-sm leading-6 text-red-800; }
@@ -38,6 +38,20 @@ a:focus-visible, button:focus-visible {
     transition: transform 180ms ease-out;
 }
 .storefront .shop-nav-link:focus-visible::after { transform: scaleX(1); }
+.storefront .shop-nav-link[aria-current='page']::after { transform: scaleX(1); }
+.storefront button:not(:disabled) { cursor: pointer; }
+.storefront .shop-whatsapp[data-floating='true'] { right: max(1.25rem, env(safe-area-inset-right)); bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+.storefront [id='categories'] { scroll-margin-top: 7rem; }
+.storefront main h1 { overflow-wrap: anywhere; }
+.storefront .shop-field { scroll-margin-top: 8rem; }
+/* Custom quantity steppers keep keyboard/min/max behavior without a second pair of spinners. */
+.storefront input[type='number'] { appearance: textfield; }
+.storefront input[type='number']::-webkit-inner-spin-button,
+.storefront input[type='number']::-webkit-outer-spin-button { appearance: none; margin: 0; }
+@keyframes shop-whatsapp-pulse { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(1.55); opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+    .storefront .shop-whatsapp-pulse { animation: shop-whatsapp-pulse 1.6s ease-out 3; }
+}
 @keyframes shop-enter { from { opacity: 0.65; } to { opacity: 1; } }
 @keyframes shop-feedback { from { opacity: 0.3; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shop-count { from { transform: scale(0.8); } 60% { transform: scale(1.12); } to { transform: scale(1); } }

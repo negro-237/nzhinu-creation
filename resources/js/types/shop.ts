@@ -17,7 +17,10 @@ export type CartItem = {
     quantity: number; valid: boolean; line_total_minor: number | null;
 };
 export type ShopProps = {
+    seo?: { head_title: string; title: string; description: string; canonical: string; robots: string; image: string; image_alt: string; structured_json: string | null;
+        category: { name: string; slug: string; description: string | null } | null };
     shop: { market: Market; markets: Market[]; boutique: { name: string; address: string; country: string }; cart_count: number; text: Record<string, string>; pages: { title: string; slug: string }[]; whatsapp_url: string | null;
+        contact_email: string | null; categories: { name: string; slug: string; icon: string }[];
         social_links: { network: string; label: string; url: string }[] };
     flash: { success: string | null }; [key: string]: unknown;
 };

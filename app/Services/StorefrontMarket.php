@@ -12,7 +12,8 @@ class StorefrontMarket
     public function markets(Request $request): Collection
     {
         if (! $request->attributes->has('shop.markets')) {
-            $request->attributes->set('shop.markets', Market::where('is_active', true)->whereIn('code', config('storefront.markets'))->orderBy('code')->get());
+            $request->attributes->set('shop.markets', Market::where('is_active', true)->whereIn('code', config('storefront.markets'))->get()
+                ->sortBy(fn ($market) => array_search($market->code, config('storefront.markets'), true))->values());
         }
 
         return $request->attributes->get('shop.markets');

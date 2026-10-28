@@ -7,6 +7,7 @@ use App\Http\Requests\SelectMarketRequest;
 use App\Services\ContentService;
 use App\Services\StorefrontCatalog;
 use App\Services\StorefrontMarket;
+use App\Support\StorefrontSeo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -17,7 +18,7 @@ class StorefrontController extends Controller
         $content = __('storefront');
         $content['market_notes'] = array_intersect_key($content['market_notes'], array_flip(config('storefront.markets')));
 
-        return Inertia::render('Welcome', [
+        return $this->render($request, 'Welcome', [
             'markets' => $markets->markets($request)->map->only(['code', 'name', 'currency']),
             'content' => $content, 'featured' => $catalog->featured($markets->current($request)),
             'categories' => $catalog->homeCategories($markets->current($request)),
@@ -30,14 +31,17 @@ class StorefrontController extends Controller
         $market = $markets->current($request);
         $filters = $request->validated();
 
-        return Inertia::render('Catalog', [
-            'products' => $catalog->listing($market, $filters), 'filters' => $filters, ...$catalog->options($market),
+        $products = $catalog->listing($market, $filters);
+        abort_if($products['current_page'] > $products['last_page'], 404);
+
+        return $this->render($request, 'Catalog', [
+            'products' => $products, 'filters' => $filters, ...$catalog->options($market),
         ]);
     }
 
     public function product(Request $request, string $slug, StorefrontMarket $markets, StorefrontCatalog $catalog)
     {
-        return Inertia::render('Product', ['product' => $catalog->detail($markets->current($request), $slug)]);
+        return $this->render($request, 'Product', ['product' => $catalog->detail($markets->current($request), $slug)]);
     }
 
     public function selectMarket(SelectMarketRequest $request, StorefrontMarket $markets)
@@ -51,6 +55,13 @@ class StorefrontController extends Controller
     {
         $page = $content->page($markets->current($request), $slug);
 
-        return Inertia::render('ContentPage', ['page' => $page->only(['title', 'body', 'meta_description'])]);
+        return $this->render($request, 'ContentPage', ['page' => $page->only(['title', 'body', 'meta_description'])]);
+    }
+
+    private function render(Request $request, string $component, array $props)
+    {
+        $props['seo'] = StorefrontSeo::forPublic($component, $props, app(StorefrontMarket::class)->current($request), $request);
+
+        return Inertia::render($component, $props);
     }
 }

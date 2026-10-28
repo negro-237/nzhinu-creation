@@ -7,5 +7,6 @@ return [
         'name' => 'Nzhinu Création — Bonaberi',
         'address' => 'Douala, Bonaberi Rail, Marché ChaCha 223',
         'country' => 'Cameroun',
+        'street' => 'Bonaberi Rail, Marché ChaCha 223', 'city' => 'Douala', 'country_code' => 'CM',
     ],
 ];

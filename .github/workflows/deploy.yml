@@ -1,0 +1,84 @@
+name: Vérification et déploiement Laravel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Tests et compilation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_mysql, pdo_sqlite, bcmath, exif, gd, zip
+          coverage: none
+          tools: composer:v2
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Préparer la configuration de test isolée
+        run: |
+          cp .env.example .env
+          php -r 'file_put_contents(".env", "\nAPP_ENV=testing\nAPP_DEBUG=false\nDB_CONNECTION=sqlite\nDB_DATABASE=:memory:\n", FILE_APPEND);'
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: php artisan key:generate --force
+      - run: php vendor/bin/pint --test
+      - run: php artisan test --compact
+      - run: npm ci
+      - run: npm run build
+      - name: Vérifier le démarrage avec les caches de production
+        run: php tools/verify-production.php
+      - name: Vérifier le script de déploiement
+        run: bash -n tools/deploy-production.sh
+
+  deploy:
+    name: Déploiement par SSH
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://nzhinu-creation.com
+    env:
+      SSH_HOST: ${{ vars.SSH_HOST || '180.149.199.229' }}
+      SSH_USER: ${{ vars.SSH_USER || 'admin' }}
+      SSH_PORT: ${{ vars.SSH_PORT || '5804' }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/home/admin/web/nzhinu-creation.com/public_html' }}
+      PHP_BIN: ${{ vars.PHP_BIN || 'php' }}
+      COMPOSER_BIN: ${{ vars.COMPOSER_BIN || 'composer' }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Déployer la révision vérifiée
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$SSH_PRIVATE_KEY" && -n "$SSH_KNOWN_HOSTS" ]] || { echo 'Secrets SSH manquants.' >&2; exit 1; }
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$SSH_USER" =~ ^[a-zA-Z0-9_-]+$ && "$SSH_PORT" =~ ^[0-9]+$ ]] || exit 1
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$ssh_dir/key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+          chmod 700 "$ssh_dir"
+          chmod 600 "$ssh_dir/key" "$ssh_dir/known_hosts"
+          printf -v remote_args '%q ' "$DEPLOY_PATH" "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$PHP_BIN" "$COMPOSER_BIN"
+          ssh -T -p "$SSH_PORT" -i "$ssh_dir/key" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o "UserKnownHostsFile=$ssh_dir/known_hosts" -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" "bash -s -- $remote_args" < tools/deploy-production.sh

@@ -50,6 +50,22 @@ class StorefrontTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_public_contacts_are_configurable_validated_and_scoped_to_the_market(): void
+    {
+        config(['communications.contact_email' => 'infos@nhinu-creation.com', 'communications.whatsapp_ca' => '',
+            'communications.whatsapp_cm' => '23755278597']);
+        $this->get('/')->assertInertia(fn (Assert $page) => $page
+            ->where('shop.contact_email', 'infos@nhinu-creation.com')->where('shop.whatsapp_url', null)
+            ->where('shop.categories.0.slug', $this->f['product']->category->slug));
+        $this->post('/marche', ['code' => 'CM'])->assertRedirect();
+        $expected = 'https://wa.me/23755278597?text='.rawurlencode(__('shop.whatsapp_message'));
+        $this->get('/')->assertOk()->assertSee('mailto:infos@nhinu-creation.com', false)
+            ->assertInertia(fn (Assert $page) => $page->where('shop.whatsapp_url', $expected));
+        config(['communications.contact_email' => 'javascript:alert(1)', 'communications.whatsapp_cm' => 'javascript:alert(1)']);
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('shop.contact_email', null)->where('shop.whatsapp_url', null));
+    }
+
     public function test_drafts_unlisted_products_inactive_categories_and_archived_products_are_not_public(): void
     {
         Product::factory()->create(['name' => 'Secret draft']);

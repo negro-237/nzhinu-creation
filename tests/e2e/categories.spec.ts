@@ -7,7 +7,7 @@ test('catégories après les produits, icône et lien vers le catalogue filtré'
     await expect(section).toBeVisible();
     const card = section.getByRole('link', { name: 'Découvrir la catégorie : Vêtements', exact: true });
     await expect(card).toBeVisible();
-    await expect(card.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+    await expect(card.locator('svg[viewBox="0 0 64 64"]')).toHaveAttribute('aria-hidden', 'true');
     await expect(card).toContainText('Des tenues et des imprimés');
     expect(await section.evaluate((element) => Boolean(document.getElementById('featured-title')!.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

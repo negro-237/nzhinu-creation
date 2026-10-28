@@ -1,16 +1,32 @@
 # Nzhinu Création — boutique africaine
 
+Référencement : HTML public lisible sans JavaScript, métadonnées locales, catégories indexables, données structurées et sitemap automatique. L’indexation est désactivée en développement ; [activation sur le domaine définitif et recette SEO](docs/seo.md).
+
+La vitrine est contrôlée à 320, 390, 768, 1024 et 1440 px. Le contact WhatsApp animé est intégré au menu sous 1440 px et reste flottant dans la marge sur les grands écrans ; il ne recouvre plus les articles, formulaires et montants. Les champs sont agrandis sur téléphone et les pages d’information reprennent les en-têtes noir et or. [Dernière recette visuelle](docs/visual-review.md).
+
 **Lancement MVP : Cameroun uniquement (XAF).** Boutique à Douala, Bonaberi Rail, Marché ChaCha 223. Les fonctionnalités techniques CA/CAD sont conservées pour une ouverture ultérieure. Configuration et retrait : [documentation](docs/cameroon-launch.md).
 
 La vitrine présente simplement la boutique et ses prix (exemple : `25 000`), sans mention du pays ou de la devise implicite. Les devises restent enregistrées et contrôlées en interne.
 
 Après « À découvrir », l’accueil présente les catégories avec icône, nom et description facultative, reliées au catalogue filtré. [Gestion des catégories et migration](docs/home-categories.md).
 
+La page `/boutique` reprend la palette noir, or et ivoire de l’accueil : en-tête éditorial, raccourcis de catégories, cartes produits communes et panneau de filtres repliable sur mobile. Le tri est accessible au-dessus des résultats. Les filtres appliqués peuvent être retirés individuellement ; le formulaire suit les raccourcis, la réinitialisation et le retour arrière du navigateur. Les raccourcis conservent les autres filtres et repartent de la première page ; le tri par défaut n’ajoute pas de paramètre superflu à l’URL.
+
+[Présentation et vérifications de la boutique](docs/boutique-presentation.md).
+
 Pied de page en colonnes et logo noir et or sans fond : [présentation et contrôle du PNG transparent](docs/footer-logo.md).
 
 Galerie produit : carrousel tactile et accessible, chevrons SVG centrés et curseur pointer sur les commandes, deux visuels par article de démonstration. Installation, gestion des photos et contrôles : [documentation](docs/product-gallery.md).
 
 Les photos peuvent être agrandies et zoomées ; les miniatures suivent la sélection. La fiche propose jusqu’à quatre articles similaires de la même catégorie, visibles dans le catalogue courant.
+
+La fiche article reprend la présentation noir et or de la boutique : titre et prix visibles avant la galerie sur mobile, disponibilité de la variante choisie, bloc de sélection et boutons de quantité. Le changement de variante ou de stock réinitialise la quantité et les choix incompatibles. Le conseil WhatsApp préremplit le nom et le lien public de l’article. [Présentation et vérifications de la fiche](docs/product-presentation.md).
+
+Le panier reprend la même présentation : fiches d’articles, boutons de quantité, récapitulatif noir et or et état vide illustré. Les quantités modifiées doivent être enregistrées avec « Actualiser » avant de poursuivre la demande ; le sous-total reste celui enregistré sur le serveur. Les articles indisponibles bloquent la demande et peuvent être retirés. [Présentation du panier](docs/cart-presentation.md).
+
+La page `/commander` présente les coordonnées et le mode de réception dans des blocs distincts, avec choix livraison/retrait illustrés et récapitulatif noir et or. Les champs de livraison restent en mémoire pendant un changement de mode, l’adresse du point de retrait apparaît après sélection et les erreurs sont regroupées puis associées à leurs champs. [Présentation et recette de la commande](docs/checkout-presentation.md).
+
+La confirmation et le suivi reprennent la même présentation : statuts séparés, progression fondée sur les états enregistrés, sélection commandée, réception et montants vérifiés. Une actualisation manuelle conserve le lien signé. Les demandes expirées, annulées ou remboursées disposent d’un affichage adapté, sans faire passer un remboursement pour une nouvelle somme à régler. [Présentation et vérifications du suivi](docs/order-tracking-presentation.md).
 
 Animations légères de la vitrine, sans dépendance et avec prise en charge du mouvement réduit : [documentation](docs/storefront-motion.md).
 
@@ -222,6 +238,14 @@ SOCIAL_YOUTUBE_URL=
 Facebook est configuré avec le lien fourni. TikTok et YouTube restent masqués jusqu'à la saisie de leurs URL HTTPS valides. Les liens apparaissent dans le pied de page noir/or, s'ouvrent dans un nouvel onglet avec `noopener noreferrer` et n'intègrent aucun script ou widget de suivi des plateformes. Le serveur accepte uniquement les domaines officiels prévus pour chaque réseau.
 
 ## Suite
+
+Le déploiement GitHub Actions est défini dans `.github/workflows/deploy.yml`, avec tests et compilation avant mise en production par SSH. Les paramètres du serveur fourni, les secrets à ajouter, la préparation Laravel et la procédure en cas d'échec sont détaillés dans [le guide de déploiement GitHub](docs/github-deployment.md). Le fichier GitLab d'origine reste une référence ; ses commandes Prisma/PM2 ne sont pas utilisées.
+
+Le menu public comprend un volet de catégories utilisable au clavier et sur mobile. L’accueil met en avant une photo de la sélection lorsqu’elle existe, conserve les catégories après « À découvrir » et présente les étapes de demande de commande.
+
+Les coordonnées publiques sont configurables : `WHATSAPP_CM=23755278597` (numéro fourni, sans `+` pour le lien `wa.me`) et `SHOP_CONTACT_EMAIL=infos@nhinu-creation.com`. Le bouton WhatsApp affiche un SVG avec trois pulsations discrètes, désactivées lorsque la réduction des animations est demandée. Il ouvre une conversation manuelle ; le lien e-mail du pied de page utilise `mailto:`. Ces réglages sont indépendants du transport des notifications e-mail. Après modification, exécuter `php artisan config:clear` en développement ou reconstruire le cache de production.
+
+Les détails et les vérifications de l’accueil, du menu et des coordonnées figurent dans [ce compte rendu](docs/accueil-contact.md).
 
 Les sept phases du MVP sont implémentées et la recette technique locale est réalisée. La mise en ligne reste soumise à la levée des réserves de configuration, aux vrais contenus/stocks et aux contrôles de l'hébergement cible.
 

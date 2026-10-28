@@ -39,7 +39,7 @@ class StorefrontCatalog
     public function options(Market $market): array
     {
         return [
-            'categories' => Category::where('is_active', true)->whereHas('products', fn ($query) => $query->availableIn($market))->orderBy('name')->get(['name', 'slug']),
+            'categories' => Category::where('is_active', true)->whereHas('products', fn ($query) => $query->availableIn($market))->orderBy('name')->get(['name', 'slug', 'description']),
             'collections' => CulturalCollection::where('is_active', true)->whereHas('products', fn ($query) => $query->availableIn($market))->orderBy('name')->get(['name', 'slug']),
         ];
     }

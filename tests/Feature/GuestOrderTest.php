@@ -70,7 +70,8 @@ class GuestOrderTest extends TestCase
         MarketPrice::query()->update(['amount_minor' => 100]);
         $this->get($response->headers->get('Location'))->assertOk()->assertHeader('Referrer-Policy', 'no-referrer')
             ->assertInertia(fn (Assert $page) => $page->component('OrderConfirmation')->where('order.items.0.product_name', 'Produit inventaire')
-                ->where('order.items.0.unit_price_minor', 5000)->missing('order.phone')->missing('order.email')->missing('order.delivery_address'));
+                ->where('order.items.0.unit_price_minor', 5000)->where('order.payment_status_code', 'unpaid')
+                ->where('order.fulfillment_status_code', 'unfulfilled')->missing('order.phone')->missing('order.email')->missing('order.delivery_address'));
         $this->assertDatabaseCount('order_histories', 1);
         $this->assertFalse(session()->has('shop.cart'));
     }
