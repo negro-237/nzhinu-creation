@@ -4,8 +4,61 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.tsx';
 
 @theme {
+    --color-brand-black: #111111;
+    --color-brand-gold: #ffb511;
+    --color-brand-gold-hover: #eaa000;
+    --color-brand-ink: #805400;
+    --color-brand-cream: #faf8f3;
+    --font-display: Georgia, 'Times New Roman', serif;
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer components {
+    .shop-container { @apply mx-auto w-full max-w-7xl px-5 sm:px-10; }
+    .shop-field { @apply w-full rounded-sm border border-stone-300 bg-white px-3 py-3 text-sm text-brand-black outline-none focus:border-brand-ink focus:ring-1 focus:ring-brand-ink; }
+    .primary-button { @apply inline-flex items-center justify-center gap-5 rounded-sm bg-brand-gold px-5 py-3 text-sm font-semibold text-brand-black transition-colors hover:bg-brand-gold-hover disabled:cursor-not-allowed disabled:opacity-50; }
+    .secondary-button { @apply inline-flex items-center justify-center rounded-sm border border-black/20 bg-white px-4 py-3 text-sm hover:border-brand-ink disabled:cursor-not-allowed disabled:opacity-50; }
+    .shop-error { @apply text-sm leading-6 text-red-800; }
+}
+
+a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--color-brand-ink);
+    outline-offset: 4px;
+}
+
+/* Motion is scoped to the storefront; Filament keeps its own interaction styles. */
+.storefront .shop-nav-link { position: relative; }
+.storefront .shop-nav-link::after {
+    content: ''; position: absolute; inset: auto 0 -7px; height: 2px;
+    background: var(--color-brand-gold); transform: scaleX(0); transform-origin: left;
+    transition: transform 180ms ease-out;
+}
+.storefront .shop-nav-link:focus-visible::after { transform: scaleX(1); }
+@keyframes shop-enter { from { opacity: 0.65; } to { opacity: 1; } }
+@keyframes shop-feedback { from { opacity: 0.3; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shop-count { from { transform: scale(0.8); } 60% { transform: scale(1.12); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: no-preference) {
+    .storefront .shop-page-enter { animation: shop-enter 260ms ease-out; }
+    .storefront .shop-feedback { animation: shop-feedback 240ms ease-out; }
+    .storefront .shop-count { animation: shop-count 300ms ease-out; }
+    .storefront :is(.primary-button, .secondary-button, .shop-product-link) {
+        transition: transform 180ms ease-out, box-shadow 180ms ease-out, background-color 180ms ease-out, border-color 180ms ease-out;
+    }
+    .storefront :is(.primary-button, .secondary-button):active:not(:disabled) { transform: scale(0.98); }
+    .storefront .primary-button > span[aria-hidden] { transition: transform 180ms ease-out; }
+    @media (hover: hover) and (pointer: fine) {
+        .storefront .shop-nav-link:hover::after { transform: scaleX(1); }
+        .storefront :is(.primary-button, .secondary-button):hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 14px #11111112; }
+        .storefront .primary-button:hover > span[aria-hidden] { transform: translate(2px, -2px); }
+        .storefront .shop-product-link:hover { transform: translateY(-4px); }
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .storefront, .storefront *, .storefront *::before, .storefront *::after {
+        animation: none !important; transition: none !important; scroll-behavior: auto !important;
+    }
 }

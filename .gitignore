@@ -16,8 +16,15 @@
 /public/build
 /public/hot
 /public/storage
+/public/css/filament
+/public/js/filament
+/public/fonts/filament
+.env.testing
 /storage/*.key
 /storage/pail
+/storage/framework/testing/
+/playwright-report/
+/test-results/
 /vendor
 Homestead.json
 Homestead.yaml

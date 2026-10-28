@@ -1,0 +1,47 @@
+import { test, expect } from '@playwright/test';
+
+test('MVP Cameroun : adresse de Bonaberi et commande en retrait', async ({ page }) => {
+    test.skip(process.env.STOREFRONT_MARKETS !== 'CM', 'Dedicated Cameroon-only launch configuration');
+    await page.goto('/');
+    const noCountryOrCurrency = async () => {
+        await expect(page.locator('body')).not.toContainText(/Cameroun|Canada|\bXAF\b|\bFCFA\b|francs?\s+CFA/i);
+        await expect(page).not.toHaveTitle(/Cameroun|\bXAF\b|FCFA/i);
+    };
+    await noCountryOrCurrency();
+    await expect(page.getByRole('combobox', { name: 'Votre marché' })).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText('Canada');
+    await expect(page.getByRole('heading', { name: 'Retrouvez-nous en boutique' })).toBeVisible();
+    await expect(page.locator('footer address')).toContainText('Douala, Bonaberi Rail, Marché ChaCha 223');
+    const map = page.locator('footer').getByRole('link', { name: 'Voir l’itinéraire — nouvel onglet' });
+    await expect(map).toHaveAttribute('href', /destination=Douala/);
+    await expect(map).toHaveAttribute('rel', 'noopener noreferrer');
+    await page.getByRole('link', { name: 'La boutique', exact: true }).click();
+    await expect(page).toHaveURL(/\/boutique$/);
+    await expect(page.getByRole('heading', { name: 'La boutique', exact: true })).toBeVisible();
+    await noCountryOrCurrency();
+    const filters = page.getByRole('button', { name: 'Filtres et recherche' });
+    if (await filters.isVisible()) await filters.click();
+    await expect(page.getByLabel('Prix minimum', { exact: true })).toBeVisible();
+    await noCountryOrCurrency();
+    await page.getByRole('link', { name: 'Découvrir la pièce : Pièce E2E' }).click();
+    await noCountryOrCurrency();
+    await expect(page.locator('main')).toContainText(/25\s*000/);
+    await page.getByLabel('Stock de départ').selectOption({ index: 1 });
+    await page.getByRole('button', { name: 'Mettre au panier' }).click();
+    await expect(page).toHaveURL(/\/panier$/);
+    await noCountryOrCurrency();
+    await page.getByRole('link', { name: 'Demander ma commande' }).click();
+    await noCountryOrCurrency();
+    await page.getByLabel('Nom complet').fill('Client Bonaberi');
+    await page.getByLabel('Téléphone', { exact: true }).fill('+237699000000');
+    await page.getByRole('radio', { name: 'Retrait', exact: true }).check();
+    await page.getByLabel('Point de retrait').selectOption({ index: 1 });
+    await expect(page.getByLabel('Point de retrait')).toContainText('Marché ChaCha 223');
+    await page.getByRole('button', { name: 'Envoyer ma demande' }).click();
+    await expect(page.getByRole('heading', { name: 'Demande reçue', exact: true })).toBeVisible();
+    await expect(page.locator('main')).toContainText('Douala, Bonaberi Rail, Marché ChaCha 223');
+    await noCountryOrCurrency();
+    await expect(page.locator('main')).toContainText(/25\s*000/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: test.info().outputPath('commande-cameroun.png'), fullPage: true });
+});

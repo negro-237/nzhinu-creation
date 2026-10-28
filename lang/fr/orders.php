@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'tracking_title' => 'Suivi de votre commande', 'tracking_intro' => 'Consultez l’état actuel de votre demande et les montants vérifiés.',
+    'zone_unspecified' => 'Zone de livraison non précisée',
+    'whatsapp' => 'Contacter l’équipe sur WhatsApp', 'whatsapp_order' => 'Bonjour, je vous contacte au sujet de ma commande :number.',
+    'verified_paid' => 'Paiements vérifiés', 'verified_refunded' => 'Remboursements vérifiés', 'verified_net' => 'Montant net vérifié',
+    'outstanding' => 'Solde à régler', 'handed_over' => 'Expédition ou retrait enregistré',
+    'checkout_title' => 'Votre demande de commande', 'confirmation_title' => 'Demande reçue',
+    'intro' => 'Sans compte et sans paiement en ligne. Notre équipe vous appelle pour confirmer les frais et le montant final.',
+    'contact' => 'Vos coordonnées', 'customer_name' => 'Nom complet', 'phone' => 'Téléphone', 'email' => 'E-mail (facultatif)',
+    'method' => 'Livraison ou retrait', 'delivery' => 'Livraison', 'pickup' => 'Retrait', 'street' => 'Adresse', 'street2' => 'Complément (facultatif)',
+    'city' => 'Ville', 'region' => 'Province / région (facultatif)', 'postal_code' => 'Code postal (facultatif)', 'country' => 'Pays',
+    'zone' => 'Zone de livraison', 'zone_unknown' => 'Zone et frais à confirmer par téléphone', 'point' => 'Point de retrait', 'choose_point' => 'Choisissez un point de retrait',
+    'no_pickup' => 'Aucun point de retrait compatible avec les stocks de ce panier. La livraison reste disponible.',
+    'summary' => 'Votre sélection', 'subtotal' => 'Sous-total des articles', 'estimate' => 'Livraison estimée', 'final_later' => 'Frais et taxes définitifs à confirmer par notre équipe.',
+    'submit' => 'Envoyer ma demande', 'back_cart' => 'Retour au panier', 'not_payment' => 'Cette demande ne constitue pas un paiement. Aucune remise ne sera effectuée avant vérification du paiement intégral.',
+    'received' => 'Votre demande a été enregistrée. Notre équipe vous contactera au numéro indiqué.', 'number' => 'Numéro de commande', 'status' => 'Commande', 'payment' => 'Paiement',
+    'fulfillment' => 'Remise', 'deadline' => 'Réservation jusqu’au', 'phone_hint' => 'Téléphone se terminant par', 'total' => 'Total définitif', 'awaiting_total' => 'À confirmer par téléphone',
+    'keep_link' => 'Conservez ce lien privé. Il donne accès au récapitulatif de votre commande et expire automatiquement.', 'continue' => 'Retour à la boutique',
+    'cart_error' => 'Le panier est vide, a changé ou contient un article indisponible. Revenez au panier pour l’actualiser.',
+    'price_changed' => 'Un prix a changé. Vérifiez le récapitulatif actualisé avant de renvoyer votre demande.',
+    'reload' => 'Rechargez le formulaire de commande avant de réessayer.', 'replay_error' => 'Cette soumission appartient à une autre demande. Rechargez le formulaire.',
+    'phone_error' => 'Saisissez un numéro de téléphone comportant 8 à 15 chiffres.', 'pickup_error' => 'Ce point de retrait n’est pas compatible avec tous les stocks du panier.',
+    'zone_error' => 'Cette zone de livraison n’est pas disponible pour le marché choisi.',
+];

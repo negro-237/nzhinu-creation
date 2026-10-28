@@ -1,0 +1,54 @@
+{
+  "tool": "image_gen built-in",
+  "directory": "public/images/demo",
+  "dress": "Use case: product-mockup. Create one premium studio catalog photo for a fictional African boutique demo product: an elegant knee-length wrap dress in black cotton wax with gold ochre geometric sunburst print, short sleeves, V neckline, waist tie. Front full view on an invisible mannequin, entire dress visible with generous margins, warm ivory seamless background, soft daylight, realistic textile weave. Portrait composition. No model, no text, no logos, no watermark. This is an illustrative demo catalog asset, not an actual product photo.",
+  "frontTemplate": "Use case: product-mockup. One premium realistic studio product photo for a fictional African fashion demo catalog. Subject: {subject}. Front full view, entire item visible with generous margins, invisible mannequin for clothes, warm ivory seamless background, soft daylight, refined black and gold palette, true fabric or jewelry texture. No people, text, branding or watermark. Portrait 2:3 composition.",
+  "subjects": [
+    [
+      "02",
+      "a short-sleeve collared button-down shirt in black cotton wax with small gold ochre geometric diamonds"
+    ],
+    [
+      "03",
+      "a matching two-piece outfit, sleeveless black and ochre geometric wax peplum top and wide-leg trousers"
+    ],
+    [
+      "04",
+      "a midi wrap skirt in black and ochre geometric wax cotton with a side waist tie"
+    ],
+    [
+      "05",
+      "a unisex black cotton long-sleeve tunic with ochre geometric patterned collar and central placket"
+    ],
+    [
+      "06",
+      "a tailored black and ochre geometric wax bomber jacket with black ribbed cuffs and collar"
+    ],
+    [
+      "07",
+      "a structured black and ochre wax fabric tote bag with two black leather handles"
+    ],
+    [
+      "08",
+      "a small black and ochre geometric wax evening clutch with a gold metal frame clasp"
+    ],
+    [
+      "09",
+      "a square black and ochre geometric print lightweight scarf loosely draped"
+    ],
+    [
+      "10",
+      "a statement necklace with round matte black beads alternating small gold beads and one larger gold center bead"
+    ],
+    [
+      "11",
+      "a single elastic bracelet with round matte black beads alternating small gold beads"
+    ],
+    [
+      "12",
+      "a pair of drop earrings with black circular disc pendants and small gold brass hooks"
+    ]
+  ],
+  "detailTemplate": "Use case: precise-object-edit. Create the second catalog photograph of the SAME demo product in the reference image. Show a close-up detail at a clearly different three-quarter angle: fabric texture and seam or fastening for garments/accessories, beads and fastening for jewelry. Preserve exact product design, pattern, materials, black and ochre/gold colors. Warm ivory seamless background, soft studio lighting, portrait composition. Single photo, no collage, no text, no people, no logos. This is an illustrative demo product image.",
+  "detailReference": "{id}-front.png (original generated image, before WebP conversion)"
+}
