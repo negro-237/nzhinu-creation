@@ -73,6 +73,8 @@ Lancer `php artisan boutique:preflight` avant ouverture commerciale et corriger 
 
 ## Échec et restauration
 
+Si SSH retourne `Permission denied`, comparer la ligne « Empreinte de la clé utilisée par GitHub Actions » du journal avec `ssh-keygen -lf ~/.ssh/authorized_keys`, exécuté sur le serveur sous l'utilisateur `admin`. Le workflow calcule cette empreinte depuis la clé privée réellement reçue, sans afficher la clé. Une différence indique que le secret ne correspond pas à la clé autorisée : remplacer `SSH_PRIVATE_KEY` dans l'environnement `production` (un secret d'environnement est prioritaire sur celui du dépôt). Si les empreintes correspondent, examiner ensuite les permissions/propriétaires de `.ssh` et `authorized_keys`, les restrictions de la clé et les journaux d'authentification du serveur. Une clé illisible ou protégée par une phrase secrète est refusée avant la connexion.
+
 Sauvegarder la base, `.env` et les médias avant la première migration et chaque livraison qui modifie les données. Garder une sauvegarde restaurable hors du répertoire de travail.
 
 Un échec après l'entrée en maintenance laisse cette maintenance active. Consulter le journal de l'action et `storage/logs/laravel.log`, réparer l'installation ou restaurer une sauvegarde cohérente, puis vérifier le site avant `php artisan up`. Une relance est volontairement refusée tant qu'une maintenance existe déjà : intervenir avant de relancer. Si seule la requête HTTPS échoue après `artisan up`, le workflow échoue mais le site reste sorti de maintenance ; vérifier DNS, TLS et le serveur web.

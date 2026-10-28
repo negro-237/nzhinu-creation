@@ -77,6 +77,12 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
           chmod 700 "$ssh_dir"
           chmod 600 "$ssh_dir/key" "$ssh_dir/known_hosts"
+          if ! ssh-keygen -y -P '' -f "$ssh_dir/key" > "$ssh_dir/key.pub"; then
+            echo 'SSH_PRIVATE_KEY doit contenir une clé privée valide sans phrase secrète.' >&2
+            exit 1
+          fi
+          printf 'Empreinte de la clé utilisée par GitHub Actions : '
+          ssh-keygen -E sha256 -lf "$ssh_dir/key.pub" | awk '{print $2}'
           printf -v remote_args '%q ' "$DEPLOY_PATH" "$GITHUB_SHA" "$GITHUB_REPOSITORY" "$PHP_BIN" "$COMPOSER_BIN"
           ssh -T -p "$SSH_PORT" -i "$ssh_dir/key" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
