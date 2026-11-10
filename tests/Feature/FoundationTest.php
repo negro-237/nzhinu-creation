@@ -160,6 +160,24 @@ class FoundationTest extends TestCase
         $this->assertTrue(User::where('email', 'staff@example.com')->firstOrFail()->hasRole(StaffRole::Staff));
     }
 
+    public function test_interactive_seeder_adds_an_administrator_without_changing_existing_account(): void
+    {
+        $existing = app(StaffService::class)->createForServerOperator($this->staffData());
+        $password = 'New-Test-Password42!';
+
+        $this->artisan('db:seed', ['--class' => 'CreateStaffUserSeeder', '--force' => true])
+            ->expectsQuestion('Nom', 'Nouvel administrateur')
+            ->expectsQuestion('Adresse e-mail', 'new-admin@example.com')
+            ->expectsQuestion('Mot de passe (12 caractères minimum, majuscule, minuscule, chiffre et symbole)', $password)
+            ->expectsChoice('Rôle', 'administrator', array_column(StaffRole::cases(), 'value'))
+            ->assertSuccessful();
+
+        $admin = User::where('email', 'new-admin@example.com')->firstOrFail();
+        $this->assertTrue($admin->hasRole(StaffRole::Administrator));
+        $this->assertTrue(Hash::check($password, $admin->password));
+        $this->assertSame($existing->password, $existing->fresh()->password);
+    }
+
     public function test_location_relations_and_unique_code_constraint(): void
     {
         $market = Market::factory()->create();

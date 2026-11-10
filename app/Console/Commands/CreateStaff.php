@@ -18,7 +18,7 @@ class CreateStaff extends Command
         $data = [
             'name' => $this->ask('Nom'),
             'email' => strtolower(trim((string) $this->ask('Adresse e-mail'))),
-            'password' => $this->secret('Mot de passe (12 caractères minimum, majuscule, minuscule, chiffre et symbole)'),
+            'password' => $this->secret('Mot de passe (12 caractères minimum, majuscule, minuscule, chiffre et symbole)', false),
             'role' => $this->choice('Rôle', array_column(StaffRole::cases(), 'value'), 2),
         ];
 

@@ -178,6 +178,8 @@ php artisan serve
 
 `staff:create` demande nom, e-mail, mot de passe masqué et rôle. Choisir `administrator` pour le premier compte. Mot de passe : au moins 12 caractères, majuscule, minuscule, chiffre et symbole. Commande réservée aux opérateurs autorisés ayant accès au serveur ; ne jamais l'exposer via HTTP. Les créations applicatives passent par `StaffService::create($actor, $data)`, avec contrôle d'autorisation. `make:filament-user` ne donne aucune permission et ne remplace pas cette commande.
 
+Pour ajouter manuellement un compte sur une installation dont les rôles sont déjà initialisés, exécuter `php artisan db:seed --class=CreateStaffUserSeeder --force` dans une session SSH interactive. Ce seeder réutilise `staff:create` : choisir `administrator` pour retrouver l’accès à l’administration et saisir une adresse e-mail distincte. Une adresse existante est refusée. Le seeder est indépendant de `DatabaseSeeder` et n’est pas lancé au déploiement. La commande `php artisan staff:create` reste utilisable directement.
+
 Le français est la langue du MVP ; textes publics dans `lang/fr`. Dates stockées en UTC. Aucun identifiant de connexion versionné. Remplacer les adresses fictives et valider les dépôts avant activation. Les permissions du personnel sont globales dans cette phase ; un éventuel périmètre par marché reste à décider avant les workflows opérationnels.
 
 L'autoload Composer n'est pas optimisé en développement pour éviter les scans très longs observés sous Windows. En déploiement : `composer install --no-dev --optimize-autoloader`. Le script Composer republie les assets Filament ; ne pas versionner les assets générés ni `public/build`.
