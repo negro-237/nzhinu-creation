@@ -109,10 +109,14 @@ class ContentTest extends TestCase
     {
         $this->actingAs($this->f['actor']);
         Filament::setCurrentPanel(Filament::getPanel('admin'));
-        Livewire::test(ManagePages::class)->callAction('create', data: $this->pageData())->assertHasNoActionErrors();
+        $data = $this->pageData();
+        unset($data['slug']);
+        Livewire::test(ManagePages::class)->callAction('create', data: $data)->assertHasNoActionErrors();
         $page = CmsPage::firstOrFail();
+        $this->assertSame('notre-maison', $page->slug);
         Livewire::test(ManagePages::class)->callAction(TestAction::make('edit')->table($page), data: $this->pageData(['version' => 0, 'title' => 'Nouveau titre']))->assertHasNoActionErrors();
         $this->assertSame('Nouveau titre', $page->fresh()->title);
+        $this->assertSame('notre-maison', $page->fresh()->slug);
         Livewire::test(ManageBanners::class)->callAction('create', data: $this->bannerData())->assertHasNoActionErrors();
         $this->assertDatabaseCount('store_banners', 1);
         Livewire::test(ManagePages::class)->callAction(TestAction::make('archive')->table($page), data: ['version' => 1])->assertHasNoActionErrors();

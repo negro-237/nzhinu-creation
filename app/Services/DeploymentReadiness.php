@@ -38,7 +38,9 @@ class DeploymentReadiness
         $add('writable', 'Répertoires Laravel accessibles en écriture', is_writable(storage_path()) && is_writable(base_path('bootstrap/cache')));
         $mailer = (string) config('mail.default');
         $email = (bool) config('communications.order_email_enabled');
-        $add('mail', 'Transport réel et expéditeur valide si les e-mails sont activés', ! $email || (! in_array($mailer, ['log', 'array', 'failover', 'roundrobin'], true)
+        $staffEmail = trim((string) config('communications.order_staff_email'));
+        $add('staff_email', 'Adresse des alertes internes valide ou désactivée', $staffEmail === '' || (bool) filter_var($staffEmail, FILTER_VALIDATE_EMAIL));
+        $add('mail', 'Transport réel et expéditeur valide si les e-mails sont activés', (! $email && $staffEmail === '') || (! in_array($mailer, ['log', 'array', 'failover', 'roundrobin'], true)
             && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL) && ! str_ends_with((string) config('mail.from.address'), '@example.com')));
         $add('email_enabled', 'E-mails clients activés (facultatif)', $email, false);
         foreach (array_map('strtolower', config('storefront.markets')) as $code) {

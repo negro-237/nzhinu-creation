@@ -239,6 +239,40 @@ class CatalogTest extends TestCase
         $this->assertDatabaseCount('market_prices', 2);
     }
 
+    public function test_product_url_is_generated_from_name_and_preserved_when_renamed(): void
+    {
+        $data = $this->data(['name' => 'Tenue ndop élégante']);
+        unset($data['slug']);
+
+        Livewire::test(CreateProduct::class)
+            ->fillForm($data)
+            ->assertFormSet(['slug' => 'tenue-ndop-elegante'])
+            ->call('create')->assertHasNoFormErrors();
+
+        $product = Product::firstOrFail();
+        $this->assertSame('tenue-ndop-elegante', $product->slug);
+        Livewire::test(EditProduct::class, ['record' => $product->id])
+            ->fillForm(['name' => 'Tenue renommée', 'slug' => 'url-modifiee'])
+            ->call('save')->assertHasNoFormErrors();
+        $this->assertSame('tenue-ndop-elegante', $product->fresh()->slug);
+    }
+
+    public function test_taxonomy_urls_are_generated_and_archived_urls_are_reserved(): void
+    {
+        $archived = Category::factory()->create(['name' => 'Sacs brodés', 'slug' => 'sacs-brodes']);
+        $archived->delete();
+        Livewire::test(CreateCategory::class)
+            ->fillForm(['name' => 'Sacs brodés', 'is_active' => true])
+            ->assertFormSet(['slug' => 'sacs-brodes-2'])
+            ->call('create')->assertHasNoFormErrors();
+        $this->assertDatabaseHas('categories', ['name' => 'Sacs brodés', 'slug' => 'sacs-brodes-2', 'deleted_at' => null]);
+
+        Livewire::test(CreateCulturalCollection::class)
+            ->fillForm(['name' => 'Élégance ndop', 'is_active' => true])
+            ->call('create')->assertHasNoFormErrors();
+        $this->assertDatabaseHas('cultural_collections', ['slug' => 'elegance-ndop']);
+    }
+
     public function test_filament_displays_service_validation_errors(): void
     {
         $data = $this->data();

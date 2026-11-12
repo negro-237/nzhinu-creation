@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\CulturalCollection;
 use App\Models\Market;
 use App\Models\Product;
+use App\Services\UrlSlugService;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Hidden;
@@ -18,10 +19,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ProductResource extends CatalogResource
 {
@@ -42,8 +46,16 @@ class ProductResource extends CatalogResource
         return $schema->components([
             Hidden::make('version')->default(0),
             Section::make('Présentation')->schema([
-                TextInput::make('name')->label('Nom')->required()->maxLength(255),
-                TextInput::make('slug')->label('Identifiant URL')->required()->maxLength(255),
+                TextInput::make('name')->label('Nom')->required()->maxLength(255)
+                    ->live(debounce: 400)
+                    ->afterStateUpdated(function (?string $state, Set $set, ?Model $record) {
+                        if ($record === null) {
+                            $set('slug', app(UrlSlugService::class)->generate($state ?? '', 'products', 255));
+                        }
+                    }),
+                TextInput::make('slug')->label('Identifiant URL')->readOnly()->maxLength(255)
+                    ->dehydrateStateUsing(fn (Get $get, ?Model $record): string => $record?->slug
+                        ?? app(UrlSlugService::class)->generate((string) $get('name'), 'products', 255)),
                 Select::make('category_id')->label('Catégorie')->options(fn () => Category::where('is_active', true)->orderBy('name')->pluck('name', 'id'))->required()->searchable(),
                 Select::make('status')->label('Statut')->options(ProductStatus::class)->default('draft')->required(),
                 Select::make('collections')->label('Collections culturelles')->multiple()->options(fn () => CulturalCollection::where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->default([]),

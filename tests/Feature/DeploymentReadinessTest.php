@@ -52,4 +52,23 @@ class DeploymentReadinessTest extends TestCase
         }
         $this->assertFalse($checks['email_enabled']['blocking']);
     }
+
+    public function test_shop_alert_requires_a_real_mail_transport_even_when_customer_emails_are_disabled(): void
+    {
+        Queue::fake();
+        $this->fixture();
+        config(['communications.order_email_enabled' => false, 'communications.order_staff_email' => 'shop@example.org',
+            'mail.default' => 'log', 'mail.from.address' => 'contact@boutique.example.org']);
+        $checks = collect(app(DeploymentReadiness::class)->checks())->keyBy('code');
+        $this->assertFalse($checks['mail']['ok']);
+        $this->assertTrue($checks['staff_email']['ok']);
+
+        config(['mail.default' => 'smtp']);
+        $checks = collect(app(DeploymentReadiness::class)->checks())->keyBy('code');
+        $this->assertTrue($checks['mail']['ok']);
+
+        config(['communications.order_staff_email' => 'invalid']);
+        $checks = collect(app(DeploymentReadiness::class)->checks())->keyBy('code');
+        $this->assertFalse($checks['staff_email']['ok']);
+    }
 }

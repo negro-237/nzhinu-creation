@@ -11,6 +11,7 @@ use App\Models\OrderHistory;
 use App\Models\OrderNotificationDelivery;
 use App\Models\OrderNotificationEvent;
 use App\Models\User;
+use App\Notifications\NewOrderStaffNotification;
 use App\Notifications\OrderUpdateNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -41,6 +42,9 @@ class OrderNotifications
             if ($event->kind->customerVisible() && config('communications.order_email_enabled') && $order->email) {
                 $this->delivery($event, 'guest', 'mail', null);
             }
+            if ($event->kind === OrderEventKind::Created && $this->staffEmail()) {
+                $this->delivery($event, 'shop', 'mail', null);
+            }
             $event->update(['expanded_at' => now()]);
         }, attempts: 3);
     }
@@ -50,6 +54,13 @@ class OrderNotifications
         $delivery = OrderNotificationDelivery::firstOrCreate(['order_notification_event_id' => $event->id, 'recipient_key' => $recipient, 'channel' => $channel],
             ['notification_id' => (string) Str::uuid(), 'user_id' => $user, 'status' => 'pending']);
         DeliverOrderNotification::dispatch($delivery->id)->afterCommit();
+    }
+
+    private function staffEmail(): ?string
+    {
+        $email = trim((string) config('communications.order_staff_email'));
+
+        return filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : null;
     }
 
     public function deliver(int $id): void
@@ -63,21 +74,27 @@ class OrderNotifications
                 $event = $delivery->event;
                 $order = Order::findOrFail($event->history->order_id);
                 $user = $delivery->user_id ? User::find($delivery->user_id) : null;
-                $allowed = $delivery->channel === 'database'
-                    ? $user && $user->can(StaffPermission::ViewOrders->value) && $user->can(StaffPermission::AccessAdmin->value)
-                    : config('communications.order_email_enabled') && $order->email && $event->kind->customerVisible();
+                $staffEmail = $this->staffEmail();
+                $isStaffEmail = $delivery->channel === 'mail' && $delivery->recipient_key === 'shop';
+                $allowed = match (true) {
+                    $delivery->channel === 'database' => $user && $user->can(StaffPermission::ViewOrders->value) && $user->can(StaffPermission::AccessAdmin->value),
+                    $isStaffEmail => $staffEmail && $event->kind === OrderEventKind::Created,
+                    default => $delivery->recipient_key === 'guest' && config('communications.order_email_enabled') && $order->email && $event->kind->customerVisible(),
+                };
                 if (! $allowed) {
                     $delivery->update(['status' => 'skipped']);
 
                     return;
                 }
-                $notification = new OrderUpdateNotification($order->id, $event->kind, $delivery->channel);
+                $notification = $isStaffEmail
+                    ? new NewOrderStaffNotification($order->id)
+                    : new OrderUpdateNotification($order->id, $event->kind, $delivery->channel);
                 $notification->id = $delivery->notification_id;
                 // This job already provides durable queueing. Do not enqueue another notification job.
                 if ($delivery->channel === 'database') {
                     Notification::sendNow($user, $notification);
                 } else {
-                    Notification::route('mail', $order->email)->notifyNow($notification);
+                    Notification::route('mail', $isStaffEmail ? $staffEmail : $order->email)->notifyNow($notification);
                 }
                 $delivery->update(['status' => 'sent', 'sent_at' => now(), 'attempts' => $delivery->attempts + 1, 'last_error' => null]);
             }, attempts: 1);

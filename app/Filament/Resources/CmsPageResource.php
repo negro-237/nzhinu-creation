@@ -6,6 +6,7 @@ use App\Filament\Support\InventoryActions;
 use App\Models\CmsPage;
 use App\Models\Market;
 use App\Services\ContentService;
+use App\Services\UrlSlugService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
@@ -15,10 +16,13 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class CmsPageResource extends Resource
 {
@@ -33,8 +37,16 @@ class CmsPageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Hidden::make('version')->default(0), TextInput::make('title')->label('Titre')->required()->maxLength(160),
-            TextInput::make('slug')->label('Identifiant URL')->required()->maxLength(120),
+            Hidden::make('version')->default(0), TextInput::make('title')->label('Titre')->required()->maxLength(160)
+                ->live(debounce: 400)
+                ->afterStateUpdated(function (?string $state, Set $set, ?Model $record) {
+                    if ($record === null) {
+                        $set('slug', app(UrlSlugService::class)->generate($state ?? '', 'cms_pages', 120));
+                    }
+                }),
+            TextInput::make('slug')->label('Identifiant URL')->readOnly()->maxLength(120)
+                ->dehydrateStateUsing(fn (Get $get, ?Model $record): string => $record?->slug
+                    ?? app(UrlSlugService::class)->generate((string) $get('title'), 'cms_pages', 120)),
             Select::make('market_id')->label('Marché (vide = les deux)')->options(fn () => Market::pluck('name', 'id')),
             Textarea::make('body')->label('Contenu en texte simple')->helperText('Les balises sont affichées comme du texte. Aucun HTML ni script ne sera exécuté.')->required()->maxLength(20000)->rows(12)->columnSpanFull(),
             Textarea::make('meta_description')->label('Description pour les moteurs de recherche')->required()->maxLength(255),

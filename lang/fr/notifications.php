@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'staff_created_subject' => 'Nouvelle commande',
+    'staff_created' => 'Une nouvelle demande de commande attend votre appel de confirmation. Connectez-vous à l’administration pour consulter ses détails.',
+    'staff_view' => 'Consulter les commandes',
     'created' => 'Votre demande a été enregistrée pour confirmation par notre équipe. Consultez le récapitulatif privé pour connaître son état actuel.',
     'confirmed' => 'Les détails de votre commande ont été confirmés. Consultez le récapitulatif privé pour le total et l’échéance.',
     'cancelled' => 'La commande a été annulée. Les éventuels fonds reçus nécessitent un traitement distinct par notre équipe.',

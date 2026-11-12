@@ -7,6 +7,7 @@ use App\Jobs\DeliverOrderNotification;
 use App\Jobs\ExpandOrderNotifications;
 use App\Models\OrderNotificationDelivery;
 use App\Models\OrderNotificationEvent;
+use App\Notifications\NewOrderStaffNotification;
 use App\Notifications\OrderUpdateNotification;
 use App\Services\OrderJournal;
 use App\Services\OrderNotifications;
@@ -29,7 +30,54 @@ class OrderNotificationTest extends TestCase
         parent::setUp();
         $this->withoutVite();
         Queue::fake();
+        config(['communications.order_staff_email' => null]);
         $this->f = $this->fixture();
+    }
+
+    public function test_new_order_alert_reaches_configured_shop_address_once_without_customer_email(): void
+    {
+        Notification::fake();
+        config(['communications.order_staff_email' => 'petitotapondjou@gmail.com', 'communications.order_email_enabled' => false]);
+        $order = $this->newOrder($this->f);
+        $this->assertNull($order->email);
+        $service = app(OrderNotifications::class);
+        foreach (OrderNotificationEvent::all() as $event) {
+            $service->expand($event->id);
+            $service->expand($event->id);
+        }
+        $this->assertSame(1, OrderNotificationDelivery::where('recipient_key', 'shop')->count());
+        $delivery = OrderNotificationDelivery::where('recipient_key', 'shop')->firstOrFail();
+        $service->deliver($delivery->id);
+        $service->deliver($delivery->id);
+        Notification::assertSentOnDemandTimes(NewOrderStaffNotification::class, 1);
+        Notification::assertSentOnDemand(NewOrderStaffNotification::class, function ($notification, $channels, $recipient) use ($order) {
+            $mail = $notification->toMail($recipient);
+            $this->assertStringContainsString($order->number, $mail->subject);
+            $this->assertSame(url('/admin/orders'), $mail->actionUrl);
+            $this->assertStringNotContainsString($order->phone, $mail->render()->toHtml());
+
+            return $recipient->routes['mail'] === 'petitotapondjou@gmail.com' && $channels === ['mail'];
+        });
+        $this->assertSame('sent', $delivery->fresh()->status);
+    }
+
+    public function test_invalid_shop_address_is_ignored_and_removing_it_skips_pending_alert(): void
+    {
+        Notification::fake();
+        config(['communications.order_staff_email' => 'invalid']);
+        $this->newOrder($this->f);
+        $service = app(OrderNotifications::class);
+        $service->expand(OrderNotificationEvent::where('kind', 'created')->firstOrFail()->id);
+        $this->assertSame(0, OrderNotificationDelivery::where('recipient_key', 'shop')->count());
+
+        config(['communications.order_staff_email' => 'shop@example.test']);
+        $this->newOrder($this->f);
+        $service->expand(OrderNotificationEvent::where('kind', 'created')->latest('id')->firstOrFail()->id);
+        $delivery = OrderNotificationDelivery::where('recipient_key', 'shop')->firstOrFail();
+        config(['communications.order_staff_email' => null]);
+        $service->deliver($delivery->id);
+        $this->assertSame('skipped', $delivery->fresh()->status);
+        Notification::assertNothingSent();
     }
 
     public function test_outbox_is_transactional_and_initial_submission_retry_does_not_duplicate_events(): void

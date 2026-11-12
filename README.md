@@ -60,6 +60,8 @@ php artisan storage:link
 
 Trois catégories initiales sont ajoutées sans écraser les modifications : Vêtements, Accessoires, Bijoux. Aucun produit ni collection culturelle fictifs n'est ajouté. Les archivages restent conservés à la réexécution des seeders.
 
+Les formulaires de produits, catégories, collections culturelles et pages publiques génèrent automatiquement l’identifiant URL à partir du nom ou du titre. Le champ est en lecture seule. Les accents sont normalisés et les doublons reçoivent un suffixe numérique, y compris lorsque l’ancienne URL appartient à un élément archivé. Un renommage conserve l’URL existante.
+
 ## Phase 3 — stocks et réservations
 
 Le groupe **Stocks** de Filament contient les lieux de stockage, stocks physiques, réservations et le journal des mouvements. Administrateurs et responsables peuvent modifier les stocks et gérer les réservations ; le personnel peut les consulter. Les droits restent globaux aux deux marchés.
@@ -150,6 +152,8 @@ Le groupe **Contenu** de Filament propose des pages publiques et des bannières 
 Le tableau de bord des administrateurs/responsables présente les commandes à appeler, confirmées et remises, les fonds vérifiés et remboursements, les situations à examiner, les stocks faibles et les notifications en attente/échec. Les montants restent séparés par marché **et devise figée**. Les fonds de commandes annulées/expirées sont inclus dans les soldes ; ils ne sont pas un chiffre d'affaires comptable. Le personnel ordinaire ne voit pas ces informations financières.
 
 Chaque événement de commande est enregistré dans une file persistante avec son historique. Le worker envoie ensuite les notifications Filament aux personnes ayant les permissions de consultation, revérifiées avant envoi. Les reprises n'ajoutent pas une seconde notification en base. Les e-mails clients facultatifs contiennent un message de suivi et un lien signé, sans coordonnées complètes ni références bancaires. Ils ne sont activés qu'après configuration de la messagerie : `ORDER_EMAIL_ENABLED=true` et un vrai transport SMTP. Le défaut est `false`, notamment pour éviter l'écriture de liens privés dans le mailer de développement `log`. Les déclarations/rejets financiers internes ne déclenchent pas d'e-mail au client.
+
+Pour recevoir une alerte interne à chaque nouvelle commande, définir `ORDER_STAFF_EMAIL=petitotapondjou@gmail.com` dans le `.env` de production, avec le transport SMTP configuré. Cette alerte est indépendante de `ORDER_EMAIL_ENABLED`, y compris si le client ne donne pas d’e-mail. Le message contient le numéro de commande et un lien vers l’administration qui exige une connexion. Le destinataire est configurable et une valeur vide désactive ces alertes. Après changement, lancer `php artisan config:cache` puis `php artisan queue:restart`. Un worker supervisé et le scheduler sont nécessaires au traitement et à la reprise de l’outbox. Les alertes concernent les événements de création traités avec cette configuration active.
 
 Configurer `WHATSAPP_CA` et `WHATSAPP_CM` avec les numéros publics de la boutique au format international sans `+` ni espaces. Sans numéro valide, aucun bouton n'apparaît. Les liens ouvrent WhatsApp manuellement ; aucun message n'est envoyé par l'application. Le lien client de suivi préremplit seulement le numéro de commande, jamais l'URL privée. Le détail staff propose un contact vers le téléphone du client uniquement s'il a fourni un numéro international commençant par `+`.
 
