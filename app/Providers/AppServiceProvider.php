@@ -25,6 +25,7 @@ use App\Policies\StockMovementPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Vite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -42,6 +43,10 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('testing') && getenv('E2E_TESTING') === '1') {
             $this->app->bind(ValidateCsrfToken::class, EnforcedCsrf::class);
             $this->app->bind(VerifyCsrfToken::class, EnforcedCsrf::class);
+            $this->app->afterResolving(Vite::class, function (Vite $vite): void {
+                // Browser tests use the compiled assets even when a local Vite marker exists.
+                $vite->useHotFile(storage_path('framework/testing/e2e.hot'));
+            });
         }
     }
 

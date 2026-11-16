@@ -106,6 +106,7 @@ for (const width of [320, 390, 768, 1024, 1440]) {
         await capture(page, info, '10-coordonnees-livraison');
         await page.getByLabel('Nom complet', { exact: true }).fill('Client revue visuelle');
         await page.getByLabel('Téléphone', { exact: true }).fill('+237699000005');
+        await page.getByLabel('E-mail', { exact: true }).fill('client-e2e@example.test');
         await page.getByLabel('Adresse', { exact: true }).fill('Adresse fictive de recette');
         await page.getByLabel('Ville', { exact: true }).fill('Douala');
         await page.getByRole('radio', { name: 'Retrait', exact: true }).check();

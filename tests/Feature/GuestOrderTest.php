@@ -131,7 +131,7 @@ class GuestOrderTest extends TestCase
         $this->assertSame(12000, Order::firstOrFail()->subtotal_minor);
     }
 
-    public function test_phone_name_delivery_address_required_email_optional_and_invalid_ids_rejected(): void
+    public function test_required_contact_delivery_address_and_invalid_ids_are_validated(): void
     {
         $data = $this->prepare();
         $this->post('/commander', [...$data, 'phone' => '', 'customer_name' => '', 'street' => '', 'city' => ''])->assertSessionHasErrors(['phone', 'customer_name', 'street', 'city']);
@@ -140,7 +140,7 @@ class GuestOrderTest extends TestCase
         $this->post('/commander', [...$data, 'request_key' => (string) Str::uuid()])->assertSessionHasErrors('request_key');
         $this->assertDatabaseCount('orders', 0);
         $this->post('/commander', $data)->assertRedirect();
-        $this->assertNull(Order::firstOrFail()->email);
+        $this->assertSame('client@example.test', Order::firstOrFail()->email);
     }
 
     public function test_pickup_requires_point_at_same_stock_location_and_snapshots_address(): void
@@ -305,10 +305,35 @@ class GuestOrderTest extends TestCase
             'quantity_on_hand' => 2, 'low_stock_threshold' => 0, 'reason' => 'Stock CM test', 'request_key' => (string) Str::uuid(),
         ]);
         $order = app(GuestCheckout::class)->place($owner, ['market_id' => $this->f['cm']->id, 'currency' => 'XAF', 'quote' => [['inventory_id' => $inventory->id, 'quantity' => 2, 'price_minor' => 25000]]],
-            ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client test CM', 'phone' => '+237699000000', 'method' => 'delivery', 'street' => 'Adresse test', 'city' => 'Ville test']);
+            ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client test CM', 'email' => 'client@example.test', 'phone' => '+237699000000', 'method' => 'delivery', 'street' => 'Adresse test', 'city' => 'Ville test']);
         $this->assertSame(50000, $order->subtotal_minor);
-        $confirmed = app(OrderWorkflow::class)->confirm($this->f['actor'], $order->id, 0, ['shipping_fee' => '1500', 'tax_amount' => '0', 'reason' => 'Appel test CM']);
-        $this->assertSame(51500, $confirmed->total_minor);
+        $this->actingAs($this->f['actor']);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Livewire::test(ManageOrders::class)->callAction(TestAction::make('confirm')->table($order), data: [
+            'version' => 0, 'shipping_fee' => '1000', 'tax_amount' => '0', 'reason' => 'Appel test CM',
+        ])->assertHasNoActionErrors();
+        $confirmed = $order->fresh();
+        $this->assertSame(1000, $confirmed->shipping_fee_minor);
+        $this->assertSame(0, $confirmed->tax_minor);
+        $this->assertSame(51000, $confirmed->total_minor);
+        $this->view('filament.orders.details', ['getRecord' => fn () => $confirmed])
+            ->assertSee('Sous-total : 50000 XAF')
+            ->assertSee('Frais de livraison : 1000 XAF')
+            ->assertSee('Taxes : 0 XAF')
+            ->assertSee('Total définitif : 51000 XAF');
+    }
+
+    public function test_email_is_required_and_validated_before_any_order_or_stock_reservation(): void
+    {
+        $data = $this->prepare();
+        foreach (['', 'not-an-email'] as $email) {
+            $this->post('/commander', [...$data, 'email' => $email])->assertSessionHasErrors('email');
+            $this->assertDatabaseCount('orders', 0);
+            $this->assertSame(0, $this->f['inventory']->fresh()->quantity_reserved);
+        }
+
+        $this->post('/commander', [...$data, 'email' => 'client@example.test'])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('client@example.test', Order::firstOrFail()->email);
     }
 
     private function prepare(): array
@@ -317,7 +342,7 @@ class GuestOrderTest extends TestCase
         $response = $this->get('/commander')->assertOk();
         $key = $response->viewData('page')['props']['checkout']['request_key'];
 
-        return ['request_key' => $key, 'customer_name' => 'Client Test', 'phone' => '+1 (514) 555-0123', 'email' => '',
+        return ['request_key' => $key, 'customer_name' => 'Client Test', 'phone' => '+1 (514) 555-0123', 'email' => 'client@example.test',
             'method' => 'delivery', 'street' => 'Adresse fictive de test', 'city' => 'Ville test'];
     }
 }

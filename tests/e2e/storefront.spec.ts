@@ -72,6 +72,7 @@ for (const market of ['CA', 'CM']) for (const method of ['delivery', 'pickup']) 
         await page.getByRole('link', { name: 'Demander ma commande' }).click();
         await page.getByLabel('Nom complet', { exact: true }).fill('Client navigateur');
         await page.getByLabel('Téléphone', { exact: true }).fill(market === 'CA' ? '+15145550123' : '+237699000000');
+        await page.getByLabel('E-mail', { exact: true }).fill('client-e2e@example.test');
         if (method === 'pickup') {
             await page.getByRole('radio', { name: 'Retrait', exact: true }).check();
             await page.getByLabel('Point de retrait').selectOption({ index: 1 });

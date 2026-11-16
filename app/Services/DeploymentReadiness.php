@@ -42,7 +42,7 @@ class DeploymentReadiness
         $add('staff_email', 'Adresse des alertes internes valide ou désactivée', $staffEmail === '' || (bool) filter_var($staffEmail, FILTER_VALIDATE_EMAIL));
         $add('mail', 'Transport réel et expéditeur valide si les e-mails sont activés', (! $email && $staffEmail === '') || (! in_array($mailer, ['log', 'array', 'failover', 'roundrobin'], true)
             && filter_var(config('mail.from.address'), FILTER_VALIDATE_EMAIL) && ! str_ends_with((string) config('mail.from.address'), '@example.com')));
-        $add('email_enabled', 'E-mails clients activés (facultatif)', $email, false);
+        $add('email_enabled', 'E-mails clients de suivi activés', $email);
         foreach (array_map('strtolower', config('storefront.markets')) as $code) {
             $phone = (string) config('communications.whatsapp_'.$code);
             $add('whatsapp_'.$code, 'Numéro WhatsApp '.strtoupper($code).' valide ou désactivé', $phone === '' || preg_match('/\A[1-9][0-9]{7,14}\z/', $phone) === 1);

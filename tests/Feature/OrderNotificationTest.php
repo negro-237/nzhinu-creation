@@ -3,18 +3,27 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderEventKind;
+use App\Enums\PaymentKind;
 use App\Jobs\DeliverOrderNotification;
 use App\Jobs\ExpandOrderNotifications;
 use App\Models\OrderNotificationDelivery;
 use App\Models\OrderNotificationEvent;
+use App\Models\StockLocation;
 use App\Notifications\NewOrderStaffNotification;
 use App\Notifications\OrderUpdateNotification;
+use App\Services\FulfillmentService;
+use App\Services\GuestCheckout;
+use App\Services\InventoryService;
 use App\Services\OrderJournal;
 use App\Services\OrderNotifications;
+use App\Services\OrderWorkflow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Tests\Support\InventoryFixture;
 use Tests\Support\OrderFixture;
 use Tests\TestCase;
@@ -39,6 +48,8 @@ class OrderNotificationTest extends TestCase
         Notification::fake();
         config(['communications.order_staff_email' => 'petitotapondjou@gmail.com', 'communications.order_email_enabled' => false]);
         $order = $this->newOrder($this->f);
+        // Orders created before email became mandatory remain supported.
+        $order->update(['email' => null]);
         $this->assertNull($order->email);
         $service = app(OrderNotifications::class);
         foreach (OrderNotificationEvent::all() as $event) {
@@ -186,5 +197,141 @@ class OrderNotificationTest extends TestCase
         $service->deliver($delivery->id);
         $this->artisan('orders:retry-notification', ['id' => $delivery->id])->assertSuccessful();
         $this->assertSame('pending', $delivery->fresh()->status);
+    }
+
+    public function test_customer_receives_tracking_link_at_creation_and_each_fulfillment_stage(): void
+    {
+        Notification::fake();
+        config(['communications.order_email_enabled' => true]);
+        $order = $this->newOrder($this->f);
+        $admin = $this->administrator();
+        $this->verifyPayment($admin, $this->receipt($admin, $order));
+        $fulfillment = app(FulfillmentService::class);
+        $fulfillment->pack($admin, $order->id, (string) Str::uuid(), 'Préparation contrôlée');
+        $fulfillment->handover($admin, $order->id, (string) Str::uuid(), [
+            'method' => 'delivery', 'carrier' => 'Transporteur test', 'reference' => 'SUIVI-TEST',
+            'note' => 'Expédition effectuée',
+        ]);
+
+        $service = app(OrderNotifications::class);
+        foreach (OrderNotificationEvent::all() as $event) {
+            $service->expand($event->id);
+            $service->expand($event->id);
+        }
+        $deliveries = OrderNotificationDelivery::where('recipient_key', 'guest')->get();
+        $this->assertEqualsCanonicalizing(['created', 'confirmed', 'payment_verified', 'packed', 'handed_over'],
+            $deliveries->map(fn ($delivery) => $delivery->event->kind->value)->all());
+        foreach ($deliveries as $delivery) {
+            $service->deliver($delivery->id);
+            $service->deliver($delivery->id);
+        }
+        Notification::assertSentOnDemandTimes(OrderUpdateNotification::class, 5);
+        foreach (Notification::sent(new AnonymousNotifiable, OrderUpdateNotification::class) as $notification) {
+            $mail = $notification->toMail(new AnonymousNotifiable);
+            $this->assertStringContainsString('signature=', $mail->actionUrl);
+            $this->get($mail->actionUrl)->assertOk();
+            if ($notification->kind === OrderEventKind::HandedOver) {
+                $this->assertSame(__('notifications.receipt_subject').' '.$order->number, $mail->subject);
+                $this->assertCount(1, $mail->rawAttachments);
+                $this->assertSame('application/pdf', $mail->rawAttachments[0]['options']['mime']);
+                $this->assertStringStartsWith('%PDF-', $mail->rawAttachments[0]['data']);
+                $html = $mail->render()->toHtml();
+                foreach (['Votre reçu de commande', 'Produit inventaire', '100.00 CAD', '5.00 CAD', '105.00 CAD', 'SUIVI-TEST', 'Transporteur test'] as $text) {
+                    $this->assertStringContainsString($text, $html);
+                }
+            }
+        }
+    }
+
+    public function test_pickup_receipt_is_sent_only_after_handover_and_uses_item_snapshots(): void
+    {
+        $order = $this->newOrder($this->f, method: 'pickup');
+        $admin = $this->administrator();
+        $payment = $this->receipt($admin, $order);
+        $this->verifyPayment($admin, $payment);
+        $this->assertStringNotContainsString('Votre reçu de commande',
+            (new OrderUpdateNotification($order->id, OrderEventKind::PaymentVerified, 'mail'))->toMail(new AnonymousNotifiable)->render()->toHtml());
+        app(FulfillmentService::class)->pack($admin, $order->id, (string) Str::uuid(), 'Colis prêt');
+        app(FulfillmentService::class)->handover($admin, $order->id, (string) Str::uuid(), [
+            'method' => 'pickup', 'reference' => 'RETRAIT-TEST', 'note' => 'Colis remis au client',
+        ]);
+        $this->f['product']->update(['name' => 'Nouveau nom catalogue']);
+
+        $mail = (new OrderUpdateNotification($order->id, OrderEventKind::HandedOver, 'mail'))->toMail(new AnonymousNotifiable);
+        $html = $mail->render()->toHtml();
+        $this->assertCount(1, $mail->rawAttachments);
+        $this->assertStringStartsWith('%PDF-', $mail->rawAttachments[0]['data']);
+        foreach (['Votre reçu de commande', 'Produit inventaire', 'RETRAIT-TEST', '105.00 CAD'] as $text) {
+            $this->assertStringContainsString($text, $html);
+        }
+        $this->assertStringNotContainsString('Nouveau nom catalogue', $html);
+        $this->assertStringNotContainsString($payment->reference, $html);
+        $this->assertStringNotContainsString($order->phone, $html);
+        $this->get($mail->actionUrl)->assertOk();
+    }
+
+    public function test_xaf_receipt_includes_verified_overpayment_refund_and_exact_net(): void
+    {
+        $location = StockLocation::where('market_id', $this->f['cm']->id)->firstOrFail();
+        $location->update(['address' => 'Adresse test CM', 'is_placeholder' => false, 'is_active' => true]);
+        $inventory = app(InventoryService::class)->create($this->f['actor'], [
+            'stock_location_id' => $location->id, 'product_variant_id' => $this->f['variant']->id,
+            'quantity_on_hand' => 3, 'low_stock_threshold' => 0, 'reason' => 'Stock CM test', 'request_key' => (string) Str::uuid(),
+        ]);
+        $order = app(GuestCheckout::class)->place(bin2hex(random_bytes(32)), [
+            'market_id' => $this->f['cm']->id, 'currency' => 'XAF',
+            'quote' => [['inventory_id' => $inventory->id, 'quantity' => 3, 'price_minor' => 25000]],
+        ], ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client reçu',
+            'email' => 'client@example.test', 'phone' => '+237699000000', 'method' => 'delivery',
+            'street' => 'Adresse test', 'city' => 'Douala']);
+        app(OrderWorkflow::class)->confirm($this->f['actor'], $order->id, 0, [
+            'shipping_fee' => '2000', 'tax_amount' => '0', 'reason' => 'Appel confirmé',
+        ]);
+        $admin = $this->administrator();
+        $this->verifyPayment($admin, $this->receipt($admin, $order, '104000'));
+        $this->verifyPayment($admin, $this->receipt($admin, $order, '27000', PaymentKind::Refund));
+        app(FulfillmentService::class)->pack($admin, $order->id, (string) Str::uuid(), 'Colis contrôlé');
+        app(FulfillmentService::class)->handover($admin, $order->id, (string) Str::uuid(), [
+            'method' => 'delivery', 'carrier' => 'Transporteur test', 'reference' => 'EXPEDITION-CM',
+            'note' => 'Expédition enregistrée',
+        ]);
+        $mail = (new OrderUpdateNotification($order->id, OrderEventKind::HandedOver, 'mail'))->toMail(new AnonymousNotifiable);
+        $html = $mail->render()->toHtml();
+        foreach (['75000 XAF', '2000 XAF', '77000 XAF', '104000 XAF', '27000 XAF', 'EXPEDITION-CM'] as $text) {
+            $this->assertStringContainsString($text, $html);
+        }
+        $this->assertStringNotContainsString('77000.00', $html);
+        $this->assertCount(1, $mail->rawAttachments);
+        $this->assertStringStartsWith('%PDF-', $mail->rawAttachments[0]['data']);
+    }
+
+    public function test_completed_order_mail_contains_a_downloadable_pdf_attachment_without_duplicate_delivery(): void
+    {
+        config(['communications.order_email_enabled' => true, 'mail.default' => 'array']);
+        $order = $this->newOrder($this->f);
+        $admin = $this->administrator();
+        $this->verifyPayment($admin, $this->receipt($admin, $order));
+        app(FulfillmentService::class)->pack($admin, $order->id, (string) Str::uuid(), 'Colis contrôlé');
+        app(FulfillmentService::class)->handover($admin, $order->id, (string) Str::uuid(), [
+            'method' => 'delivery', 'carrier' => 'Transporteur test',
+            'reference' => 'COLIS-PDF', 'note' => 'Expédition effectuée',
+        ]);
+        $event = OrderNotificationEvent::where('kind', OrderEventKind::HandedOver)->firstOrFail();
+        $service = app(OrderNotifications::class);
+        $service->expand($event->id);
+        $delivery = OrderNotificationDelivery::where('order_notification_event_id', $event->id)->where('recipient_key', 'guest')->firstOrFail();
+        $service->deliver($delivery->id);
+        $service->deliver($delivery->id);
+
+        $messages = Mail::mailer()->getSymfonyTransport()->messages();
+        $this->assertCount(1, $messages);
+        $message = $messages->first()->getOriginalMessage();
+        $this->assertSame('client@example.test', $message->getTo()[0]->getAddress());
+        $this->assertCount(1, $message->getAttachments());
+        $attachment = $message->getAttachments()[0];
+        $this->assertSame('application/pdf', $attachment->getContentType());
+        $this->assertSame('attachment', $attachment->getDisposition());
+        $this->assertSame('recu-'.strtolower($order->number).'.pdf', $attachment->getFilename());
+        $this->assertStringStartsWith('%PDF-', $attachment->getBody());
     }
 }

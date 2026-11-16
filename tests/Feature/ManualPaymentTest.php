@@ -336,7 +336,7 @@ class ManualPaymentTest extends TestCase
             'product_variant_id' => $this->f['variant']->id, 'quantity_on_hand' => 2, 'low_stock_threshold' => 0, 'reason' => 'Stock CM test', 'request_key' => (string) Str::uuid()]);
         $cmOrder = app(GuestCheckout::class)->place(bin2hex(random_bytes(32)), ['market_id' => $this->f['cm']->id, 'currency' => 'XAF',
             'quote' => [['inventory_id' => $inventory->id, 'quantity' => 1, 'price_minor' => 25000]]],
-            ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client CM', 'phone' => '+237699000000', 'method' => 'delivery', 'street' => 'Adresse test', 'city' => 'Ville test']);
+            ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client CM', 'email' => 'client@example.test', 'phone' => '+237699000000', 'method' => 'delivery', 'street' => 'Adresse test', 'city' => 'Ville test']);
         app(OrderWorkflow::class)->confirm($this->f['actor'], $cmOrder->id, 0, ['shipping_fee' => '0', 'tax_amount' => '0', 'reason' => 'Appel confirmé']);
         $this->denied(fn () => $this->receipt($this->f['actor'], $cmOrder, '25000.50'));
         $this->verifyPayment($this->admin, $this->receipt($this->f['actor'], $cmOrder, '25000'));
@@ -349,7 +349,7 @@ class ManualPaymentTest extends TestCase
         MarketPrice::where('market_id', $this->f['ca']->id)->update(['amount_minor' => 0]);
         $draft = ['market_id' => $this->f['ca']->id, 'currency' => 'CAD', 'quote' => [['inventory_id' => $this->f['inventory']->id, 'quantity' => 1, 'price_minor' => 0]]];
         $order = app(GuestCheckout::class)->place(bin2hex(random_bytes(32)), $draft,
-            ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client test', 'phone' => '+15145550123', 'method' => 'delivery', 'street' => 'Adresse test', 'city' => 'Ville test']);
+            ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client test', 'email' => 'client@example.test', 'phone' => '+15145550123', 'method' => 'delivery', 'street' => 'Adresse test', 'city' => 'Ville test']);
         app(OrderWorkflow::class)->confirm($this->f['actor'], $order->id, 0, ['shipping_fee' => '0', 'tax_amount' => '0', 'reason' => 'Gratuité validée']);
         $this->denied(fn () => $this->pack($order));
         $this->verifyPayment($this->admin, $this->receipt($this->f['actor'], $order, '0'));

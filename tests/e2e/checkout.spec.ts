@@ -31,6 +31,12 @@ test('livraison, estimation, erreurs accessibles et informations conservées au 
     const nameField = await page.getByLabel('Nom complet', { exact: true }).boundingBox();
     expect(contact!.y + contact!.height <= nameField!.y || contact!.x >= nameField!.x + nameField!.width).toBe(true);
     await page.getByLabel('Téléphone', { exact: true }).fill('+237699000001');
+    const email = page.getByLabel('E-mail', { exact: true });
+    await expect(email).toHaveAttribute('required', '');
+    expect(await email.evaluate((element: HTMLInputElement) => element.checkValidity())).toBe(false);
+    await email.fill('adresse-invalide');
+    expect(await email.evaluate((element: HTMLInputElement) => element.checkValidity())).toBe(false);
+    await email.fill('client-e2e@example.test');
     await page.getByLabel('Adresse', { exact: true }).fill('Adresse fictive de test');
     await page.getByLabel('Ville', { exact: true }).fill('Douala');
     await page.getByLabel('Zone de livraison', { exact: true }).selectOption('999999');
@@ -71,6 +77,7 @@ test('retrait sans adresse de livraison, choix requis et demande réelle', async
     await prepare(page);
     await page.getByLabel('Nom complet', { exact: true }).fill('Client recette retrait');
     await page.getByLabel('Téléphone', { exact: true }).fill('+237699000002');
+    await page.getByLabel('E-mail', { exact: true }).fill('client-e2e@example.test');
     await page.getByRole('radio', { name: 'Retrait', exact: true }).check();
     const point = page.getByLabel('Point de retrait', { exact: true });
     await expect(point).toHaveAttribute('required', '');

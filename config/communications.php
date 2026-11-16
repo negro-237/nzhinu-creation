@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'order_email_enabled' => (bool) env('ORDER_EMAIL_ENABLED', false),
+    'order_email_enabled' => (bool) env('ORDER_EMAIL_ENABLED', true),
     'order_staff_email' => env('ORDER_STAFF_EMAIL'),
     'whatsapp_ca' => env('WHATSAPP_CA'),
     'whatsapp_cm' => env('WHATSAPP_CM', '23755278597'),

@@ -17,7 +17,7 @@ trait OrderFixture
 {
     private function newOrder(array $f, bool $confirmed = true, string $method = 'delivery'): Order
     {
-        $data = ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client test', 'phone' => '+15145550123',
+        $data = ['request_key' => (string) Str::uuid(), 'customer_name' => 'Client test', 'email' => 'client@example.test', 'phone' => '+15145550123',
             'method' => $method, 'street' => 'Adresse fictive', 'city' => 'Ville test'];
         if ($method === 'pickup') {
             $point = PickupPoint::create(['market_id' => $f['ca']->id, 'stock_location_id' => $f['location']->id,

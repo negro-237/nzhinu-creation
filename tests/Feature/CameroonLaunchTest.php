@@ -101,7 +101,7 @@ class CameroonLaunchTest extends TestCase
         $this->get('/commander')->assertOk()->assertInertia(fn (Assert $page) => $page->has('checkout.points', 1)
             ->where('checkout.points.0.address', 'Douala, Bonaberi Rail, Marché ChaCha 223'));
         $key = array_key_first(session('checkout.drafts'));
-        $this->post('/commander', ['request_key' => $key, 'customer_name' => 'Client Cameroun', 'phone' => '+237699000000',
+        $this->post('/commander', ['request_key' => $key, 'customer_name' => 'Client Cameroun', 'email' => 'client@example.test', 'phone' => '+237699000000',
             'method' => 'pickup', 'pickup_point_id' => PickupPoint::firstOrFail()->id])->assertSessionHasNoErrors()->assertRedirect();
         $order = Order::firstOrFail();
         $this->assertSame('XAF', $order->currency->value);

@@ -37,7 +37,7 @@ export default function Checkout({ checkout, content: t }: Props) {
     const point = checkout.points.find((item) => item.id === Number(form.data.pickup_point_id));
     const count = checkout.cart.items.reduce((total, item) => total + item.quantity, 0);
     function field(name: ContactField) {
-        const required = ['customer_name', 'phone', 'street', 'city'].includes(name);
+        const required = ['customer_name', 'phone', 'email', 'street', 'city'].includes(name);
         const help = name === 'phone' ? t.phone_help : name === 'email' ? t.email_help : null;
         return <div key={name} className="min-w-0"><label htmlFor={`checkout-${name}`} className="block text-xs font-medium"><span id={`checkout-label-${name}`}>{t[name]}</span>{required && <span aria-hidden="true" className="ml-1 text-brand-ink">*</span>}</label>
             <input id={`checkout-${name}`} aria-labelledby={`checkout-label-${name}`} className="shop-field mt-2" value={form.data[name]} required={required} disabled={form.processing}

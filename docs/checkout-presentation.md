@@ -2,7 +2,7 @@
 
 La page `/commander` reprend le noir, l’or, l’ivoire et les étapes du panier. Les coordonnées et le choix de réception sont présentés dans deux blocs numérotés. Le récapitulatif des pièces, le sous-total et le bouton d’envoi sont placés à droite sur ordinateur, après les champs sur mobile.
 
-Nom et téléphone restent obligatoires ; l’e-mail est facultatif. Les champs requis sont signalés visuellement et conservent la validation native. Les longueurs maximales et les attributs d’autocomplétion suivent les champs métier. Les erreurs du serveur sont associées aux champs et regroupées dans un bloc qui reçoit le focus après un envoi invalide.
+Nom, téléphone et e-mail sont obligatoires. Le lien privé de suivi et les changements de statut visibles par le client sont envoyés par e-mail. Les champs requis sont signalés visuellement et conservent la validation native. Les longueurs maximales et les attributs d’autocomplétion suivent les champs métier. Les erreurs du serveur sont associées aux champs et regroupées dans un bloc qui reçoit le focus après un envoi invalide.
 
 Les cartes de livraison et de retrait utilisent des boutons radio natifs. Le changement de mode conserve les coordonnées, l’adresse et les choix dans l’état du formulaire, et efface les erreurs propres au mode quitté. L’adresse de livraison n’est demandée qu’en livraison. Le point choisi est requis en retrait et son adresse est affichée séparément. Le retrait reste désactivé si aucun point compatible n’est fourni par le serveur.
 

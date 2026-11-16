@@ -11,6 +11,8 @@
     @endif
     <ul>@foreach($order->items as $item)<li>{{ $item->product_name }} · {{ $item->variant_label }} · {{ $item->sku }} · {{ $item->quantity }} × {{ \App\Support\MoneyInput::fromMinor($item->unit_price_minor, $order->currency) }} {{ $order->currency->value }} · dépôt #{{ $item->stock_location_id }}</li>@endforeach</ul>
     <p>Sous-total : {{ \App\Support\MoneyInput::fromMinor($order->subtotal_minor, $order->currency) }} {{ $order->currency->value }}</p>
+    <p>Frais de livraison : {{ $order->shipping_fee_minor === null ? 'À confirmer' : \App\Support\MoneyInput::fromMinor($order->shipping_fee_minor, $order->currency).' '.$order->currency->value }}</p>
+    <p>Taxes : {{ $order->tax_minor === null ? 'À confirmer' : \App\Support\MoneyInput::fromMinor($order->tax_minor, $order->currency).' '.$order->currency->value }}</p>
     <p>Total définitif : {{ $order->total_minor === null ? 'À confirmer' : \App\Support\MoneyInput::fromMinor($order->total_minor, $order->currency).' '.$order->currency->value }}</p>
     <p>Réservation jusqu’au {{ $order->reservation->expires_at->format('d/m/Y H:i') }} UTC · {{ $order->payment_status->getLabel() }} · {{ $order->fulfillment_status->getLabel() }}</p>
     <h3>Fonds vérifiés</h3>

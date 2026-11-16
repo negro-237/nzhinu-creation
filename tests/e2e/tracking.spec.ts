@@ -9,6 +9,7 @@ async function placeOrder(page: Page) {
     await page.getByRole('link', { name: 'Demander ma commande', exact: true }).click();
     await page.getByLabel('Nom complet', { exact: true }).fill('Client recette suivi');
     await page.getByLabel('Téléphone', { exact: true }).fill('+237699000004');
+    await page.getByLabel('E-mail', { exact: true }).fill('client-e2e@example.test');
     await page.getByRole('radio', { name: 'Retrait', exact: true }).check();
     await page.getByLabel('Point de retrait', { exact: true }).selectOption({ index: 1 });
     await page.getByRole('button', { name: 'Envoyer ma demande', exact: true }).click();

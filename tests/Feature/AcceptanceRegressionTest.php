@@ -35,7 +35,7 @@ class AcceptanceRegressionTest extends TestCase
         $this->post('/panier/lignes', ['inventory_id' => $f['inventory']->id, 'quantity' => 1])->assertRedirect();
         $page = $this->get('/commander')->assertOk();
         $key = $page->viewData('page')['props']['checkout']['request_key'];
-        $this->post('/commander', ['request_key' => $key, 'customer_name' => 'Client recette', 'phone' => '+15145550123',
+        $this->post('/commander', ['request_key' => $key, 'customer_name' => 'Client recette', 'email' => 'client@example.test', 'phone' => '+15145550123',
             'method' => 'delivery', 'street' => 'Adresse fictive', 'city' => 'Ville test'])->assertRedirect();
         $this->assertDatabaseCount('orders', 2);
     }

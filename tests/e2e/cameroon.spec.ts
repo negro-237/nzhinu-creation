@@ -34,6 +34,7 @@ test('MVP Cameroun : adresse de Bonaberi et commande en retrait', async ({ page 
     await noCountryOrCurrency();
     await page.getByLabel('Nom complet').fill('Client Bonaberi');
     await page.getByLabel('Téléphone', { exact: true }).fill('+237699000000');
+    await page.getByLabel('E-mail', { exact: true }).fill('client-e2e@example.test');
     await page.getByRole('radio', { name: 'Retrait', exact: true }).check();
     await page.getByLabel('Point de retrait').selectOption({ index: 1 });
     await expect(page.getByLabel('Point de retrait')).toContainText('Marché ChaCha 223');

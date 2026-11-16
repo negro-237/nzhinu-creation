@@ -247,7 +247,7 @@ class InventoryConcurrencyTest extends TestCase
 
         return ['mode' => 'checkout', 'actor' => $f['actor']->id, 'owner' => bin2hex(random_bytes(32)),
             'draft' => ['market_id' => $f['ca']->id, 'currency' => 'CAD', 'quote' => [['inventory_id' => $f['inventory']->id, 'quantity' => 1, 'price_minor' => 5000]]],
-            'data' => ['request_key' => $key, 'customer_name' => 'Client concurrence', 'phone' => '+15145550123', 'method' => 'delivery', 'street' => 'Adresse fictive test', 'city' => 'Ville test']];
+            'data' => ['request_key' => $key, 'customer_name' => 'Client concurrence', 'email' => 'client@example.test', 'phone' => '+15145550123', 'method' => 'delivery', 'street' => 'Adresse fictive test', 'city' => 'Ville test']];
     }
 
     private function reservationPayload(array $f): array

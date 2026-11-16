@@ -25,7 +25,7 @@ class GuestOrderRequest extends FormRequest
         return [
             'request_key' => ['required', 'uuid'], 'customer_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30', 'regex:/\A\+?[0-9() .-]{8,30}\z/'],
-            'email' => ['nullable', 'email', 'max:255'], 'method' => ['required', Rule::in(['delivery', 'pickup'])],
+            'email' => ['required', 'email', 'max:255'], 'method' => ['required', Rule::in(['delivery', 'pickup'])],
             'pickup_point_id' => ['nullable', 'required_if:method,pickup', 'integer', 'min:1'],
             'delivery_zone_id' => ['nullable', 'integer', 'min:1'],
             'street' => ['nullable', 'required_if:method,delivery', 'string', 'max:255'],
@@ -47,6 +47,6 @@ class GuestOrderRequest extends FormRequest
 
     public function attributes(): array
     {
-        return ['customer_name' => 'nom', 'phone' => 'téléphone', 'street' => 'adresse', 'city' => 'ville', 'pickup_point_id' => 'point de retrait'];
+        return ['customer_name' => 'nom', 'phone' => 'téléphone', 'email' => 'adresse e-mail', 'street' => 'adresse', 'city' => 'ville', 'pickup_point_id' => 'point de retrait'];
     }
 }

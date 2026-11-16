@@ -50,7 +50,8 @@ class DeploymentReadinessTest extends TestCase
         foreach (['debug', 'https', 'session_secure', 'session_encrypted', 'mail', 'whatsapp_ca', 'whatsapp_cm'] as $code) {
             $this->assertTrue($checks[$code]['ok'], $code);
         }
-        $this->assertFalse($checks['email_enabled']['blocking']);
+        $this->assertTrue($checks['email_enabled']['blocking']);
+        $this->assertFalse($checks['email_enabled']['ok']);
     }
 
     public function test_shop_alert_requires_a_real_mail_transport_even_when_customer_emails_are_disabled(): void
